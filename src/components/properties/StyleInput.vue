@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import CssColorPicker from '@/components/CssColorPicker.vue'
+
 const props = defineProps<{
   label: string
   modelValue: string
@@ -30,12 +32,10 @@ function onInput(e: Event) {
       <option v-for="opt in options" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
     </select>
     <div v-else-if="type === 'color'" class="flex min-w-0 flex-1 items-center gap-1.5">
-      <input
-        type="color"
-        class="size-7 shrink-0 cursor-pointer rounded border border-[#45475a] bg-[#313244] p-0.5"
-        :value="modelValue.startsWith('#') ? modelValue : '#000000'"
-        @input="onInput"
-      >
+      <CssColorPicker
+        :model-value="modelValue"
+        @update:model-value="emit('update:modelValue', $event)"
+      />
       <input
         class="h-7 min-w-0 flex-1 rounded border border-[#45475a] bg-[#313244] px-2 font-mono text-xs text-[#cdd6f4]"
         :value="modelValue"
