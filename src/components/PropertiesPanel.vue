@@ -2,7 +2,15 @@
 import { computed } from 'vue'
 import type { DesignNode, FrameLayout } from '@/model/types'
 import { useDocumentStore } from '@/model/document'
-import { nodeToVueTemplate } from '@/model/serialize'
+
+import PositionSection from './properties/PositionSection.vue'
+import LayoutSection from './properties/LayoutSection.vue'
+import AppearanceSection from './properties/AppearanceSection.vue'
+import TypographySection from './properties/TypographySection.vue'
+import FillSection from './properties/FillSection.vue'
+import BorderSection from './properties/BorderSection.vue'
+import EffectsSection from './properties/EffectsSection.vue'
+import CodeSection from './properties/CodeSection.vue'
 
 const store = useDocumentStore()
 
@@ -18,136 +26,72 @@ const layout = computed<FrameLayout | null>(() => {
   return store.frameLayout[node.value.id] ?? null
 })
 
-const vueCode = computed(() => {
-  if (!node.value) return ''
-  return nodeToVueTemplate(node.value)
-})
-
-function getStyle(prop: string): string {
-  return node.value?.props.style?.[prop] ?? ''
-}
-
-function setStyle(prop: string, value: string) {
+function onStyleChange(prop: string, value: string) {
   if (!node.value) return
   store.updateNodeStyle(node.value.id, { [prop]: value })
 }
 
-function setFrameLayout(prop: keyof FrameLayout, value: string) {
-  if (!node.value || !layout.value) return
-  const num = parseFloat(value)
-  if (isNaN(num)) return
+function onFrameChange(prop: keyof FrameLayout, value: number) {
+  if (!node.value) return
   if (prop === 'x' || prop === 'y') {
-    store.updateFramePos(node.value.id, prop === 'x' ? num : layout.value.x, prop === 'y' ? num : layout.value.y)
+    store.updateFramePos(
+      node.value.id,
+      prop === 'x' ? value : layout.value!.x,
+      prop === 'y' ? value : layout.value!.y,
+    )
   } else {
-    store.updateFrameSize(node.value.id, prop === 'width' ? num : layout.value.width, prop === 'height' ? num : layout.value.height)
+    store.updateFrameSize(
+      node.value.id,
+      prop === 'width' ? value : layout.value!.width,
+      prop === 'height' ? value : layout.value!.height,
+    )
   }
-}
-
-async function copyCode() {
-  if (!vueCode.value) return
-  await navigator.clipboard.writeText(vueCode.value)
 }
 </script>
 
 <template>
-  <div class="fixed top-10 right-0 bottom-0 w-72 bg-[#1e1e2e] border-l border-[#313244] z-40 overflow-y-auto">
+  <div class="fixed top-10 right-0 bottom-0 z-40 w-72 overflow-y-auto border-l border-[#313244] bg-[#1e1e2e]">
     <template v-if="node">
-      <div class="px-4 pt-3 pb-1 text-[11px] font-semibold uppercase tracking-widest text-[#a6adc8]">
-        {{ node.meta.name ?? `<${node.type}>` }}
+      <!-- Header -->
+      <div class="flex items-center gap-1.5 border-b border-[#313244] px-4 py-2">
+        <span class="text-[11px] text-[#a6adc8]">&lt;{{ node.type }}&gt;</span>
+        <span class="text-xs font-semibold text-[#cdd6f4]">{{ node.meta.name ?? node.type }}</span>
       </div>
 
-      <!-- Frame position/size -->
-      <div v-if="layout" class="border-b border-[#313244] px-4 py-2">
-        <div class="text-[11px] font-semibold uppercase tracking-widest text-[#a6adc8] mb-2">Frame</div>
-        <div class="grid grid-cols-2 gap-2 mb-1.5">
-          <label v-for="prop in (['x', 'y', 'width', 'height'] as const)" :key="prop">
-            <span class="text-[10px] text-[#a6adc8] uppercase">{{ prop === 'width' ? 'W' : prop === 'height' ? 'H' : prop.toUpperCase() }}</span>
-            <input
-              class="w-full h-7 bg-[#313244] border border-[#45475a] rounded px-2 text-[#cdd6f4] text-xs"
-              :value="layout[prop]"
-              @change="setFrameLayout(prop, ($event.target as HTMLInputElement).value)"
-            >
-          </label>
-        </div>
-      </div>
-
-      <!-- Layout -->
-      <div class="border-b border-[#313244] px-4 py-2">
-        <div class="text-[11px] font-semibold uppercase tracking-widest text-[#a6adc8] mb-2">Layout</div>
-        <label class="flex items-center gap-2 mb-1.5">
-          <span class="w-8 text-[11px] text-[#a6adc8]">Disp</span>
-          <select
-            class="flex-1 h-7 bg-[#313244] border border-[#45475a] rounded px-1.5 text-[#cdd6f4] text-xs"
-            :value="getStyle('display')"
-            @change="setStyle('display', ($event.target as HTMLSelectElement).value)"
-          >
-            <option value="">–</option>
-            <option value="block">Block</option>
-            <option value="flex">Flex</option>
-            <option value="grid">Grid</option>
-            <option value="inline-flex">Inline Flex</option>
-            <option value="none">None</option>
-          </select>
-        </label>
-        <label class="flex items-center gap-2 mb-1.5">
-          <span class="w-8 text-[11px] text-[#a6adc8]">Gap</span>
-          <input class="flex-1 h-7 bg-[#313244] border border-[#45475a] rounded px-2 text-[#cdd6f4] text-xs" :value="getStyle('gap')" @change="setStyle('gap', ($event.target as HTMLInputElement).value)">
-        </label>
-        <label class="flex items-center gap-2 mb-1.5">
-          <span class="w-8 text-[11px] text-[#a6adc8]">Pad</span>
-          <input class="flex-1 h-7 bg-[#313244] border border-[#45475a] rounded px-2 text-[#cdd6f4] text-xs" :value="getStyle('padding')" @change="setStyle('padding', ($event.target as HTMLInputElement).value)">
-        </label>
-      </div>
-
-      <!-- Fill -->
-      <div class="border-b border-[#313244] px-4 py-2">
-        <div class="text-[11px] font-semibold uppercase tracking-widest text-[#a6adc8] mb-2">Fill</div>
-        <label class="flex items-center gap-2 mb-1.5">
-          <span class="w-8 text-[11px] text-[#a6adc8]">BG</span>
-          <input class="flex-1 h-7 bg-[#313244] border border-[#45475a] rounded px-2 text-[#cdd6f4] text-xs" :value="getStyle('background') || getStyle('backgroundColor')" @change="setStyle('background', ($event.target as HTMLInputElement).value)">
-        </label>
-      </div>
-
-      <!-- Border -->
-      <div class="border-b border-[#313244] px-4 py-2">
-        <div class="text-[11px] font-semibold uppercase tracking-widest text-[#a6adc8] mb-2">Border</div>
-        <label class="flex items-center gap-2 mb-1.5">
-          <span class="w-8 text-[11px] text-[#a6adc8]">Rad</span>
-          <input class="flex-1 h-7 bg-[#313244] border border-[#45475a] rounded px-2 text-[#cdd6f4] text-xs" :value="getStyle('borderRadius')" @change="setStyle('borderRadius', ($event.target as HTMLInputElement).value)">
-        </label>
-      </div>
-
-      <!-- Size (non-frame elements) -->
-      <div v-if="!isFrame" class="border-b border-[#313244] px-4 py-2">
-        <div class="text-[11px] font-semibold uppercase tracking-widest text-[#a6adc8] mb-2">Size</div>
-        <div class="grid grid-cols-2 gap-2">
-          <label>
-            <span class="text-[10px] text-[#a6adc8]">W</span>
-            <input class="w-full h-7 bg-[#313244] border border-[#45475a] rounded px-2 text-[#cdd6f4] text-xs" :value="getStyle('width')" @change="setStyle('width', ($event.target as HTMLInputElement).value)">
-          </label>
-          <label>
-            <span class="text-[10px] text-[#a6adc8]">H</span>
-            <input class="w-full h-7 bg-[#313244] border border-[#45475a] rounded px-2 text-[#cdd6f4] text-xs" :value="getStyle('height')" @change="setStyle('height', ($event.target as HTMLInputElement).value)">
-          </label>
-        </div>
-      </div>
-
-      <!-- Vue Code -->
-      <div class="border-b border-[#313244] px-4 py-2">
-        <div class="flex items-center justify-between mb-2">
-          <div class="text-[11px] font-semibold uppercase tracking-widest text-[#a6adc8]">Code</div>
-          <button
-            class="text-[10px] text-[#89b4fa] hover:text-[#b4befe] transition-colors"
-            @click="copyCode"
-          >
-            Copy
-          </button>
-        </div>
-        <pre class="bg-[#11111b] rounded-md p-3 text-[11px] leading-[1.5] text-[#cdd6f4] overflow-x-auto whitespace-pre font-mono max-h-64 overflow-y-auto"><code>{{ vueCode }}</code></pre>
-      </div>
+      <PositionSection
+        :node="node"
+        :layout="layout"
+        @style="onStyleChange"
+        @frame="onFrameChange"
+      />
+      <LayoutSection
+        :node="node"
+        @style="onStyleChange"
+      />
+      <AppearanceSection
+        :node="node"
+        @style="onStyleChange"
+      />
+      <TypographySection
+        :node="node"
+        @style="onStyleChange"
+      />
+      <FillSection
+        :node="node"
+        @style="onStyleChange"
+      />
+      <BorderSection
+        :node="node"
+        @style="onStyleChange"
+      />
+      <EffectsSection
+        :node="node"
+        @style="onStyleChange"
+      />
+      <CodeSection :node="node" />
     </template>
 
-    <div v-else class="px-4 py-8 text-[#a6adc8] text-center text-xs">
+    <div v-else class="px-4 py-8 text-center text-xs text-[#a6adc8]">
       Select an element
     </div>
   </div>
