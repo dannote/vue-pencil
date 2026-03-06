@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, reactive, onMounted, onBeforeUnmount, inject, nextTick, type Ref } from 'vue'
 import { useDocumentStore } from '@/model/document'
-import { findNode } from '@/model/operations'
+import { findNode, removeNode } from '@/model/operations'
 import Island from './Island.vue'
 import SelectionOverlay from './SelectionOverlay.vue'
 import InsertionIndicator from './InsertionIndicator.vue'
@@ -17,6 +17,7 @@ import { isFlexContainer, getFlexDirection } from '@/renderer/flex-detect'
 
 const store = useDocumentStore()
 const preview = inject<Ref<boolean>>('preview')!
+const activeTool = inject<Ref<string>>('activeTool')!
 
 const panviewRef = ref<HTMLPanviewElement>()
 const zoom = ref(1)
@@ -30,7 +31,6 @@ function onViewportChange() {
 
 // --- Selection rects ---
 
-// Bumped after operations that move elements, so the computed re-evaluates
 const geometryVersion = ref(0)
 
 function refreshGeometry() {
@@ -42,7 +42,6 @@ function refreshGeometry() {
 }
 
 const selectionRects = computed(() => {
-  // Track these so we re-evaluate when they change
   void geometryVersion.value
   if (preview.value) return []
   const rects: { id: string; x: number; y: number; width: number; height: number }[] = []
@@ -168,11 +167,7 @@ function findDropTarget(canvasX: number, canvasY: number, draggedNodeId: string)
     const islandComp = islandRefs.value[frame.id]
     if (!islandComp?.iframe?.contentDocument) continue
 
-    // Walk up from deepest hit element to find the nearest flex container
-    const el = islandComp.iframe.contentDocument.elementFromPoint(localX, localY)
-    if (!el) continue
-
-    let current: Element | null = el.closest('[data-node-id]')
+    let current: Element | null = islandComp.iframe.contentDocument.elementFromPoint(localX, localY)?.closest('[data-node-id]') ?? null
     while (current) {
       const nid = current.getAttribute('data-node-id')
       if (!nid || nid === draggedNodeId) {
@@ -199,13 +194,12 @@ function findDropTarget(canvasX: number, canvasY: number, draggedNodeId: string)
           height: lineLocal.height,
         }
 
-        // Adjust index for the dragged node's original position
         let adjustedIndex = idx
         const draggedParent = modelNode.children.findIndex(
           (c) => typeof c !== 'string' && c.id === draggedNodeId,
         )
         if (draggedParent !== -1 && draggedParent < idx) {
-          adjustedIndex = idx // After removal, indices shift down — but computeInsertionIndex already excludes dragged
+          adjustedIndex = idx
         }
 
         return { frameId: frame.id, parentId: nid, index: adjustedIndex, line: lineCanvas }
@@ -214,7 +208,6 @@ function findDropTarget(canvasX: number, canvasY: number, draggedNodeId: string)
       current = current.parentElement?.closest('[data-node-id]') ?? null
     }
 
-    // Frame root itself might be a flex container
     if (isFlexContainer(frame)) {
       const direction = getFlexDirection(frame)
       const childRects = getChildRects(islandComp.iframe!, frame.id)
@@ -239,6 +232,91 @@ function findDropTarget(canvasX: number, canvasY: number, draggedNodeId: string)
   return null
 }
 
+// --- Drawing tools ---
+
+const drawPreview = ref<{ x: number; y: number; width: number; height: number } | null>(null)
+
+const DRAW_TOOLS = new Set(['frame', 'rectangle', 'text', 'ellipse', 'input'])
+
+function isDrawTool(): boolean {
+  return DRAW_TOOLS.has(activeTool.value)
+}
+
+interface DrawState {
+  startX: number
+  startY: number
+  tool: string
+}
+
+let drawState: DrawState | null = null
+
+function createNodeFromTool(tool: string, x: number, y: number, w: number, h: number) {
+  switch (tool) {
+    case 'frame': {
+      const frame = store.addFrame(x, y, Math.max(w, MIN_SIZE), Math.max(h, MIN_SIZE), {
+        background: 'white',
+        borderRadius: '8px',
+      })
+      store.select(frame.id)
+      break
+    }
+    case 'rectangle': {
+      const frame = store.addFrame(x, y, Math.max(w, MIN_SIZE), Math.max(h, MIN_SIZE), {
+        background: '#d9d9d9',
+      })
+      store.select(frame.id)
+      break
+    }
+    case 'ellipse': {
+      const frame = store.addFrame(x, y, Math.max(w, MIN_SIZE), Math.max(h, MIN_SIZE), {
+        background: '#d9d9d9',
+        borderRadius: '50%',
+      })
+      store.select(frame.id)
+      break
+    }
+    case 'text': {
+      const minW = Math.max(w, 120)
+      const minH = Math.max(h, 40)
+      const frame = store.addFrame(x, y, minW, minH, {
+        fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
+        fontSize: '16px',
+        color: '#1e1e2e',
+      })
+      store.addChild(frame.id, 'p', {
+        margin: '0',
+      }, ['Type something'])
+      store.select(frame.id)
+      break
+    }
+    case 'input': {
+      const minW = Math.max(w, 200)
+      const minH = Math.max(h, 60)
+      const frame = store.addFrame(x, y, minW, minH, {
+        fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
+      })
+      const input = store.addChild(frame.id, 'input', {
+        width: '100%',
+        padding: '8px 12px',
+        border: '2px solid #cdd6f4',
+        borderRadius: '8px',
+        fontSize: '14px',
+        outline: 'none',
+        boxSizing: 'border-box',
+      }, [], undefined, 'Text Input')
+      if (input) {
+        input.props.type = 'text'
+        input.props.placeholder = 'Enter text...'
+      }
+      store.select(frame.id)
+      break
+    }
+  }
+
+  activeTool.value = 'select'
+  refreshGeometry()
+}
+
 // --- Pointer interaction ---
 
 const CURSORS: Record<Handle, string> = {
@@ -248,7 +326,7 @@ const CURSORS: Record<Handle, string> = {
 
 const TEXT_TAGS = new Set(['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'label', 'a', 'li', 'dt', 'dd', 'figcaption', 'blockquote', 'em', 'strong', 'b', 'i', 'u', 'small', 'sub', 'sup'])
 
-let mode: 'none' | 'pending-drag' | 'drag-frame' | 'drag-element' | 'resize' = 'none'
+let mode: 'none' | 'pending-drag' | 'drag-frame' | 'drag-element' | 'resize' | 'drawing' = 'none'
 let dragId = ''
 let dragHitFrameId = ''
 let activeHandle: Handle | null = null
@@ -267,7 +345,7 @@ function onPointerDown(e: PointerEvent) {
   const pv = panviewRef.value
   if (!pv || pv.spaceHeld || e.button === 1 || preview.value) return
 
-  // Click outside the edited node commits text editing
+  // Commit text editing on click outside
   if (store.editingTextId) {
     const canvas = pv.viewportToCanvas(e.clientX, e.clientY)
     const hit = hitTestFrames(canvas.x, canvas.y)
@@ -280,7 +358,19 @@ function onPointerDown(e: PointerEvent) {
 
   const canvas = pv.viewportToCanvas(e.clientX, e.clientY)
 
-  // Check resize handles first
+  // Drawing tools
+  if (isDrawTool()) {
+    mode = 'drawing'
+    drawState = { startX: canvas.x, startY: canvas.y, tool: activeTool.value }
+    drawPreview.value = { x: canvas.x, y: canvas.y, width: 0, height: 0 }
+    store.deselect()
+    window.addEventListener('pointermove', onPointerMove)
+    window.addEventListener('pointerup', onPointerUp)
+    e.preventDefault()
+    return
+  }
+
+  // Resize handles
   const handleHit = hitTestHandle(canvas.x, canvas.y)
   if (handleHit) {
     mode = 'resize'
@@ -308,7 +398,7 @@ function onPointerDown(e: PointerEvent) {
     return
   }
 
-  // Detect double-click on text nodes
+  // Double-click on text
   const now = performance.now()
   if (
     now - lastClickTime < DBLCLICK_MS &&
@@ -337,12 +427,10 @@ function onPointerDown(e: PointerEvent) {
   dragHitFrameId = hit.frameId
 
   if (hit.nodeId === hit.frameId) {
-    // Frame: start drag immediately (no threshold needed, frames are big)
     mode = 'drag-frame'
     const layout = store.frameLayout[hit.frameId]
     startRect = { x: layout.x, y: layout.y, w: layout.width, h: layout.height }
   } else {
-    // Element inside a frame: wait for threshold before starting drag
     mode = 'pending-drag'
   }
 
@@ -356,6 +444,16 @@ function onPointerMove(e: PointerEvent) {
   if (!pv) return
 
   const canvas = pv.viewportToCanvas(e.clientX, e.clientY)
+
+  if (mode === 'drawing' && drawState) {
+    const x = Math.min(drawState.startX, canvas.x)
+    const y = Math.min(drawState.startY, canvas.y)
+    const w = Math.abs(canvas.x - drawState.startX)
+    const h = Math.abs(canvas.y - drawState.startY)
+    drawPreview.value = { x, y, width: w, height: h }
+    return
+  }
+
   const dx = canvas.x - dragStartCanvas.x
   const dy = canvas.y - dragStartCanvas.y
 
@@ -375,7 +473,6 @@ function onPointerMove(e: PointerEvent) {
   if (mode === 'drag-element') {
     const target = findDropTarget(canvas.x, canvas.y, dragId)
     dropTarget.value = target
-
   }
 
   if (mode === 'resize' && activeHandle) {
@@ -401,6 +498,17 @@ function onPointerMove(e: PointerEvent) {
 }
 
 function onPointerUp() {
+  if (mode === 'drawing' && drawState && drawPreview.value) {
+    const { x, y, width, height } = drawPreview.value
+    createNodeFromTool(drawState.tool, x, y, width, height)
+    drawState = null
+    drawPreview.value = null
+    mode = 'none'
+    window.removeEventListener('pointermove', onPointerMove)
+    window.removeEventListener('pointerup', onPointerUp)
+    return
+  }
+
   if (mode === 'drag-element' && dropTarget.value) {
     store.moveNodeTo(dragId, dropTarget.value.parentId, dropTarget.value.index)
     store.select(dragId)
@@ -409,16 +517,23 @@ function onPointerUp() {
 
   mode = 'none'
   activeHandle = null
+  drawState = null
+  drawPreview.value = null
   dropTarget.value = null
   if (panviewRef.value) panviewRef.value.style.cursor = ''
   window.removeEventListener('pointermove', onPointerMove)
   window.removeEventListener('pointerup', onPointerUp)
 }
 
-// Hover cursor for resize handles
+// Hover cursor
 function onCanvasPointerMove(e: PointerEvent) {
   const pv = panviewRef.value
   if (!pv || preview.value || mode !== 'none') return
+
+  if (isDrawTool()) {
+    pv.style.cursor = 'crosshair'
+    return
+  }
 
   const canvas = pv.viewportToCanvas(e.clientX, e.clientY)
   const handleHit = hitTestHandle(canvas.x, canvas.y)
@@ -440,8 +555,26 @@ function setIslandRef(frameId: string, comp: InstanceType<typeof Island> | null)
 }
 
 function onKeyDown(e: KeyboardEvent) {
-  if (e.key === 'Escape' && store.editingTextId) {
-    store.commitTextEdit()
+  if (e.key === 'Escape') {
+    if (store.editingTextId) {
+      store.commitTextEdit()
+      refreshGeometry()
+    } else if (isDrawTool()) {
+      activeTool.value = 'select'
+    }
+  }
+
+  if ((e.key === 'Delete' || e.key === 'Backspace') && store.selectedIds.size > 0 && !store.editingTextId) {
+    for (const id of store.selectedIds) {
+      if (store.frameLayout[id]) {
+        store.removeFrame(id)
+      } else {
+        for (const frame of store.frames) {
+          removeNode(frame, id)
+        }
+      }
+    }
+    store.deselect()
     refreshGeometry()
   }
 }
@@ -449,14 +582,12 @@ function onKeyDown(e: KeyboardEvent) {
 onMounted(() => {
   panviewRef.value?.addEventListener('pointerdown', onPointerDown)
   panviewRef.value?.addEventListener('pointermove', onCanvasPointerMove)
-
   window.addEventListener('keydown', onKeyDown)
 })
 
 onBeforeUnmount(() => {
   panviewRef.value?.removeEventListener('pointerdown', onPointerDown)
   panviewRef.value?.removeEventListener('pointermove', onCanvasPointerMove)
-
   window.removeEventListener('keydown', onKeyDown)
 })
 </script>
@@ -480,5 +611,21 @@ onBeforeUnmount(() => {
     />
     <SelectionOverlay v-if="!preview" :rects="selectionRects" :zoom="zoom" :editing-id="store.editingTextId" />
     <InsertionIndicator :line="insertionLine" :zoom="zoom" />
+
+    <!-- Draw preview rectangle -->
+    <div
+      v-if="drawPreview"
+      :style="{
+        position: 'absolute',
+        left: `${drawPreview.x}px`,
+        top: `${drawPreview.y}px`,
+        width: `${drawPreview.width}px`,
+        height: `${drawPreview.height}px`,
+        border: '2px solid #4361ee',
+        borderRadius: activeTool === 'ellipse' ? '50%' : '0',
+        background: 'rgba(67, 97, 238, 0.08)',
+        pointerEvents: 'none',
+      }"
+    />
   </design-panview>
 </template>

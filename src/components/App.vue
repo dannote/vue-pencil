@@ -13,6 +13,7 @@ const preview = ref(false)
 const zoom = ref(1)
 
 provide('preview', preview)
+provide('activeTool', activeTool)
 
 function onTool(name: string) {
   activeTool.value = name
