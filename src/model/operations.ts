@@ -71,6 +71,20 @@ export function moveNode(
   return true
 }
 
+export function cloneNode(node: DesignNode): DesignNode {
+  const props: DesignNode['props'] = {}
+  for (const [k, v] of Object.entries(node.props)) {
+    props[k] = typeof v === 'object' && v !== null ? { ...v as Record<string, string> } : v
+  }
+  return {
+    id: nodeId(),
+    type: node.type,
+    props,
+    children: node.children.map(c => typeof c === 'string' ? c : cloneNode(c)),
+    meta: { ...node.meta },
+  }
+}
+
 export function updateStyle(node: DesignNode, updates: Record<string, string>): void {
   node.props.style = { ...node.props.style, ...updates }
 }

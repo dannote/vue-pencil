@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, reactive, onMounted, onBeforeUnmount, inject, nextTick, type Ref } from 'vue'
 import { useDocumentStore } from '@/model/document'
-import { findNode, removeNode } from '@/model/operations'
+import { findNode, findParent, removeNode, insertChild, cloneNode } from '@/model/operations'
 import Island from './Island.vue'
 import SelectionOverlay from './SelectionOverlay.vue'
 import InsertionIndicator from './InsertionIndicator.vue'
@@ -334,6 +334,7 @@ let dragStartCanvas = { x: 0, y: 0 }
 let startRect = { x: 0, y: 0, w: 0, h: 0 }
 let lastClickTime = 0
 let lastClickNodeId = ''
+let altClone = false
 
 const dropTarget = reactive<{ value: DropTarget | null }>({ value: null })
 
@@ -425,11 +426,23 @@ function onPointerDown(e: PointerEvent) {
   dragStartCanvas = { x: canvas.x, y: canvas.y }
   dragId = hit.nodeId
   dragHitFrameId = hit.frameId
+  altClone = e.altKey
 
   if (hit.nodeId === hit.frameId) {
     mode = 'drag-frame'
     const layout = store.frameLayout[hit.frameId]
     startRect = { x: layout.x, y: layout.y, w: layout.width, h: layout.height }
+
+    if (altClone) {
+      const frame = store.frames.find(f => f.id === hit.frameId)
+      if (frame) {
+        const clone = cloneNode(frame)
+        store.frames.push(clone)
+        store.frameLayout[clone.id] = { ...layout }
+        dragId = clone.id
+        store.select(clone.id)
+      }
+    }
   } else {
     mode = 'pending-drag'
   }
@@ -461,6 +474,22 @@ function onPointerMove(e: PointerEvent) {
     if (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD) {
       mode = 'drag-element'
       pv.style.cursor = 'grabbing'
+
+      if (altClone) {
+        const frame = store.findFrameContaining(dragId)
+        if (frame) {
+          const node = findNode(frame, dragId)
+          if (node) {
+            const clone = cloneNode(node)
+            const loc = findParent(frame, dragId)
+            if (loc) {
+              insertChild(loc.parent, clone, loc.index + 1)
+              dragId = clone.id
+              store.select(clone.id)
+            }
+          }
+        }
+      }
     } else {
       return
     }
@@ -520,6 +549,7 @@ function onPointerUp() {
   drawState = null
   drawPreview.value = null
   dropTarget.value = null
+  altClone = false
   if (panviewRef.value) panviewRef.value.style.cursor = ''
   window.removeEventListener('pointermove', onPointerMove)
   window.removeEventListener('pointerup', onPointerUp)

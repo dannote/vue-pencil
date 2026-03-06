@@ -39,11 +39,12 @@ export function mountIsland(iframe: HTMLIFrameElement, initialTree: DesignNode):
   doc.write(
     `<!DOCTYPE html><html><head><style>
 *,*::before,*::after{box-sizing:border-box}
-html,body,#root{margin:0;height:100%;background:transparent}
+html,body,#root{margin:0;height:100%;background:transparent;user-select:none;-webkit-user-select:none}
 button:hover{filter:brightness(1.1)}
 button:active{transform:scale(0.97)}
 input:focus{border-color:#4361ee !important}
 [style*="cursor: pointer"]:hover{transform:scale(1.03)}
+[contenteditable]{user-select:text;-webkit-user-select:text}
 </style></head><body><div id="root"></div></body></html>`,
   )
   doc.close()
