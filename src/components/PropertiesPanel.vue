@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import type { DesignNode, FrameLayout } from '@/model/types'
 import { useDocumentStore } from '@/model/document'
+import { nodeToVueTemplate } from '@/model/serialize'
 
 const store = useDocumentStore()
 
@@ -15,6 +16,11 @@ const isFrame = computed(() => {
 const layout = computed<FrameLayout | null>(() => {
   if (!node.value || !isFrame.value) return null
   return store.frameLayout[node.value.id] ?? null
+})
+
+const vueCode = computed(() => {
+  if (!node.value) return ''
+  return nodeToVueTemplate(node.value)
 })
 
 function getStyle(prop: string): string {
@@ -36,10 +42,15 @@ function setFrameLayout(prop: keyof FrameLayout, value: string) {
     store.updateFrameSize(node.value.id, prop === 'width' ? num : layout.value.width, prop === 'height' ? num : layout.value.height)
   }
 }
+
+async function copyCode() {
+  if (!vueCode.value) return
+  await navigator.clipboard.writeText(vueCode.value)
+}
 </script>
 
 <template>
-  <div class="fixed top-10 right-0 bottom-0 w-60 bg-[#1e1e2e] border-l border-[#313244] z-40 overflow-y-auto">
+  <div class="fixed top-10 right-0 bottom-0 w-72 bg-[#1e1e2e] border-l border-[#313244] z-40 overflow-y-auto">
     <template v-if="node">
       <div class="px-4 pt-3 pb-1 text-[11px] font-semibold uppercase tracking-widest text-[#a6adc8]">
         {{ node.meta.name ?? `<${node.type}>` }}
@@ -88,7 +99,7 @@ function setFrameLayout(prop: keyof FrameLayout, value: string) {
         </label>
       </div>
 
-      <!-- Background -->
+      <!-- Fill -->
       <div class="border-b border-[#313244] px-4 py-2">
         <div class="text-[11px] font-semibold uppercase tracking-widest text-[#a6adc8] mb-2">Fill</div>
         <label class="flex items-center gap-2 mb-1.5">
@@ -119,6 +130,20 @@ function setFrameLayout(prop: keyof FrameLayout, value: string) {
             <input class="w-full h-7 bg-[#313244] border border-[#45475a] rounded px-2 text-[#cdd6f4] text-xs" :value="getStyle('height')" @change="setStyle('height', ($event.target as HTMLInputElement).value)">
           </label>
         </div>
+      </div>
+
+      <!-- Vue Code -->
+      <div class="border-b border-[#313244] px-4 py-2">
+        <div class="flex items-center justify-between mb-2">
+          <div class="text-[11px] font-semibold uppercase tracking-widest text-[#a6adc8]">Code</div>
+          <button
+            class="text-[10px] text-[#89b4fa] hover:text-[#b4befe] transition-colors"
+            @click="copyCode"
+          >
+            Copy
+          </button>
+        </div>
+        <pre class="bg-[#11111b] rounded-md p-3 text-[11px] leading-[1.5] text-[#cdd6f4] overflow-x-auto whitespace-pre font-mono max-h-64 overflow-y-auto"><code>{{ vueCode }}</code></pre>
       </div>
     </template>
 
