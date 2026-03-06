@@ -554,17 +554,64 @@ function setIslandRef(frameId: string, comp: InstanceType<typeof Island> | null)
   }
 }
 
+function toggleAutoLayout() {
+  if (store.selectedIds.size !== 1) return
+  const id = [...store.selectedIds][0]
+
+  for (const frame of store.frames) {
+    const node = findNode(frame, id)
+    if (!node) continue
+
+    if (node.props.style?.display === 'flex' || node.props.style?.display === 'inline-flex') {
+      store.updateNodeStyle(id, { display: '', flexDirection: '', gap: '', padding: '', alignItems: '', justifyContent: '' })
+    } else {
+      // Detect direction: if children are laid out more horizontally, use row
+      const frameLayout = store.frameLayout[id]
+      const islandComp = islandRefs.value[frame.id]
+      let direction: 'row' | 'column' = 'column'
+
+      const iframeEl = frameLayout ? islandComp?.iframe : islandRefs.value[frame.id]?.iframe
+      if (iframeEl && node.children.filter(c => typeof c !== 'string').length >= 2) {
+        const rects = getChildRects(iframeEl, id)
+        if (rects.length >= 2) {
+          const dx = Math.abs(rects[1].rect.x - rects[0].rect.x)
+          const dy = Math.abs(rects[1].rect.y - rects[0].rect.y)
+          if (dx > dy) direction = 'row'
+        }
+      }
+
+      store.updateNodeStyle(id, {
+        display: 'flex',
+        flexDirection: direction,
+        gap: '8px',
+        padding: node.props.style?.padding || '8px',
+      })
+    }
+    refreshGeometry()
+    return
+  }
+}
+
 function onKeyDown(e: KeyboardEvent) {
-  if (e.key === 'Escape') {
-    if (store.editingTextId) {
+  if (store.editingTextId) {
+    if (e.key === 'Escape') {
       store.commitTextEdit()
       refreshGeometry()
-    } else if (isDrawTool()) {
-      activeTool.value = 'select'
     }
+    return
   }
 
-  if ((e.key === 'Delete' || e.key === 'Backspace') && store.selectedIds.size > 0 && !store.editingTextId) {
+  if (e.key === 'Escape') {
+    if (isDrawTool()) activeTool.value = 'select'
+  }
+
+  if (e.key === 'a' && e.shiftKey && !e.metaKey && !e.ctrlKey) {
+    e.preventDefault()
+    toggleAutoLayout()
+    return
+  }
+
+  if ((e.key === 'Delete' || e.key === 'Backspace') && store.selectedIds.size > 0) {
     for (const id of store.selectedIds) {
       if (store.frameLayout[id]) {
         store.removeFrame(id)
