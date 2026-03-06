@@ -2,6 +2,7 @@
 import { ref, computed, reactive, onMounted, onBeforeUnmount, inject, nextTick, type Ref } from 'vue'
 import { useDocumentStore } from '@/model/document'
 import { findNode, findParent, removeNode, insertChild, cloneNode } from '@/model/operations'
+import { ISLAND_BLEED } from '@/renderer/island-renderer'
 import Island from './Island.vue'
 import SelectionOverlay from './SelectionOverlay.vue'
 import InsertionIndicator from './InsertionIndicator.vue'
@@ -92,7 +93,7 @@ function hitTestFrames(canvasX: number, canvasY: number): { frameId: string; nod
       const localX = canvasX - layout.x
       const localY = canvasY - layout.y
 
-      const el = islandComp.iframe.contentDocument.elementFromPoint(localX, localY)
+      const el = islandComp.iframe.contentDocument.elementFromPoint(localX + ISLAND_BLEED, localY + ISLAND_BLEED)
       if (el) {
         const nid = el.closest('[data-node-id]')?.getAttribute('data-node-id')
         if (nid) return { frameId: frame.id, nodeId: nid }
@@ -167,7 +168,7 @@ function findDropTarget(canvasX: number, canvasY: number, draggedNodeId: string)
     const islandComp = islandRefs.value[frame.id]
     if (!islandComp?.iframe?.contentDocument) continue
 
-    let current: Element | null = islandComp.iframe.contentDocument.elementFromPoint(localX, localY)?.closest('[data-node-id]') ?? null
+    let current: Element | null = islandComp.iframe.contentDocument.elementFromPoint(localX + ISLAND_BLEED, localY + ISLAND_BLEED)?.closest('[data-node-id]') ?? null
     while (current) {
       const nid = current.getAttribute('data-node-id')
       if (!nid || nid === draggedNodeId) {

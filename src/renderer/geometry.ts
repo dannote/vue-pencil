@@ -1,4 +1,5 @@
 import type { FrameLayout } from '@/model/types'
+import { ISLAND_BLEED } from './island-renderer'
 
 export interface NodeRect {
   x: number
@@ -14,7 +15,7 @@ export function getNodeRect(
   const el = iframe.contentDocument?.querySelector(`[data-node-id="${nodeId}"]`)
   if (!el) return null
   const rect = el.getBoundingClientRect()
-  return { x: rect.x, y: rect.y, width: rect.width, height: rect.height }
+  return { x: rect.x - ISLAND_BLEED, y: rect.y - ISLAND_BLEED, width: rect.width, height: rect.height }
 }
 
 export function nodeRectToCanvas(
@@ -45,7 +46,7 @@ export function getChildRects(
     const rect = child.getBoundingClientRect()
     result.push({
       nodeId: id,
-      rect: { x: rect.x, y: rect.y, width: rect.width, height: rect.height },
+      rect: { x: rect.x - ISLAND_BLEED, y: rect.y - ISLAND_BLEED, width: rect.width, height: rect.height },
     })
   }
   return result

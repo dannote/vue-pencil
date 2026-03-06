@@ -33,13 +33,16 @@ export interface IslandApp {
   destroy: () => void
 }
 
+export const ISLAND_BLEED = 40
+
 export function mountIsland(iframe: HTMLIFrameElement, initialTree: DesignNode): IslandApp {
   const doc = iframe.contentDocument!
   doc.open()
   doc.write(
     `<!DOCTYPE html><html><head><style>
 *,*::before,*::after{box-sizing:border-box}
-html,body,#root{margin:0;height:100%;background:transparent;user-select:none;-webkit-user-select:none}
+html,body{margin:0;height:100%;background:transparent;user-select:none;-webkit-user-select:none;overflow:hidden}
+#root{margin:${ISLAND_BLEED}px;height:calc(100% - ${ISLAND_BLEED * 2}px)}
 button:hover{filter:brightness(1.1)}
 button:active{transform:scale(0.97)}
 input:focus{border-color:#4361ee !important}

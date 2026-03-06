@@ -14,6 +14,8 @@ const emit = defineEmits<{
   commitText: [nodeId: string, text: string]
 }>()
 
+const BLEED = 40
+
 const iframeRef = ref<HTMLIFrameElement>()
 let islandApp: IslandApp | null = null
 let editingEl: HTMLElement | null = null
@@ -120,6 +122,7 @@ defineExpose({
       top: `${layout.y}px`,
       width: `${layout.width}px`,
       height: `${layout.height}px`,
+      overflow: 'visible',
     }"
     :data-frame-id="frame.id"
   >
@@ -128,10 +131,12 @@ defineExpose({
       srcdoc="<!DOCTYPE html><html><head></head><body></body></html>"
       :style="{
         border: 'none',
-        width: '100%',
-        height: '100%',
+        width: `calc(100% + ${BLEED * 2}px)`,
+        height: `calc(100% + ${BLEED * 2}px)`,
+        margin: `-${BLEED}px`,
         display: 'block',
         background: 'transparent',
+        pointerEvents: interactive ? 'auto' : 'none',
       }"
     />
     <!-- Shield: blocks pointer events in edit mode, removed in preview and during text editing -->
