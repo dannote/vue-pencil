@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import CssColorPicker from '@/components/CssColorPicker.vue'
+import CssFillPicker from '@/components/CssFillPicker.vue'
 
 const props = defineProps<{
   label: string
@@ -32,7 +32,7 @@ function onInput(e: Event) {
       <option v-for="opt in options" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
     </select>
     <div v-else-if="type === 'color'" class="flex min-w-0 flex-1 items-center gap-1.5">
-      <CssColorPicker
+      <CssFillPicker
         :model-value="modelValue"
         @update:model-value="emit('update:modelValue', $event)"
       />

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { DesignNode } from '@/model/types'
+import ScrubInput from '@/components/ScrubInput.vue'
 import SectionHeader from './SectionHeader.vue'
 import StyleInput from './StyleInput.vue'
 
@@ -13,6 +14,11 @@ const emit = defineEmits<{
 
 function getStyle(prop: string, node: DesignNode): string {
   return node.props.style?.[prop] ?? ''
+}
+
+function parsePx(v: string, fallback: number): number {
+  const n = parseFloat(v)
+  return Number.isNaN(n) ? fallback : n
 }
 
 const styleOptions = [
@@ -35,16 +41,14 @@ const styleOptions = [
         :model-value="getStyle('borderColor', node)"
         @update:model-value="emit('style', 'borderColor', $event)"
       />
-      <div class="flex gap-1.5">
-        <label class="flex min-w-0 flex-1 items-center gap-1.5">
-          <span class="w-8 shrink-0 text-[11px] text-[#a6adc8]">Width</span>
-          <input
-            class="h-7 min-w-0 flex-1 rounded border border-[#45475a] bg-[#313244] px-2 text-xs text-[#cdd6f4]"
-            :value="getStyle('borderWidth', node)"
-            placeholder="0"
-            @change="emit('style', 'borderWidth', ($event.target as HTMLInputElement).value)"
-          >
-        </label>
+      <div class="flex items-center gap-2">
+        <span class="w-8 shrink-0 text-[11px] text-[#a6adc8]">Width</span>
+        <ScrubInput
+          :model-value="parsePx(getStyle('borderWidth', node), 0)"
+          :min="0"
+          suffix="px"
+          @update:model-value="emit('style', 'borderWidth', `${$event}px`)"
+        />
       </div>
       <StyleInput
         label="Style"
