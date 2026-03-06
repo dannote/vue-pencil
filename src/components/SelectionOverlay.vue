@@ -4,6 +4,7 @@ import { computed } from 'vue'
 const props = defineProps<{
   rects: { id: string; x: number; y: number; width: number; height: number }[]
   zoom: number
+  editingId?: string | null
 }>()
 
 const HANDLE_SIZE = 8
@@ -53,6 +54,7 @@ const handleBorder = computed(() => 1 / props.zoom)
       />
       <div
         v-for="h in handles"
+        v-show="rect.id !== editingId"
         :key="`${rect.id}-${h}`"
         :style="{
           position: 'absolute',

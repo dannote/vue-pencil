@@ -10,6 +10,7 @@ export const useDocumentStore = defineStore('document', () => {
 
   const selectedIds = ref<Set<string>>(new Set())
   const hoveredId = ref<string | null>(null)
+  const editingTextId = ref<string | null>(null)
 
   const selectedNodes = computed(() => {
     const result: DesignNode[] = []
@@ -137,6 +138,24 @@ export const useDocumentStore = defineStore('document', () => {
     }
   }
 
+  function updateNodeText(id: string, children: (DesignNode | string)[]): void {
+    for (const frame of frames.value) {
+      const node = findNode(frame, id)
+      if (node) {
+        node.children = children
+        return
+      }
+    }
+  }
+
+  function startTextEditing(id: string): void {
+    editingTextId.value = id
+  }
+
+  function commitTextEdit(): void {
+    editingTextId.value = null
+  }
+
   return {
     frames,
     frameLayout,
@@ -152,7 +171,11 @@ export const useDocumentStore = defineStore('document', () => {
     select,
     deselect,
     updateNodeStyle,
+    editingTextId,
     updateFramePos,
     updateFrameSize,
+    updateNodeText,
+    startTextEditing,
+    commitTextEdit,
   }
 })

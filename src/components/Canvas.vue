@@ -246,20 +246,37 @@ const CURSORS: Record<Handle, string> = {
   se: 'nwse-resize', s: 'ns-resize', sw: 'nesw-resize', w: 'ew-resize',
 }
 
+const TEXT_TAGS = new Set(['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'label', 'a', 'li', 'dt', 'dd', 'figcaption', 'blockquote', 'em', 'strong', 'b', 'i', 'u', 'small', 'sub', 'sup'])
+
 let mode: 'none' | 'pending-drag' | 'drag-frame' | 'drag-element' | 'resize' = 'none'
 let dragId = ''
 let dragHitFrameId = ''
 let activeHandle: Handle | null = null
 let dragStartCanvas = { x: 0, y: 0 }
 let startRect = { x: 0, y: 0, w: 0, h: 0 }
+let lastClickTime = 0
+let lastClickNodeId = ''
 
 const dropTarget = reactive<{ value: DropTarget | null }>({ value: null })
 
 const insertionLine = computed(() => dropTarget.value?.line ?? null)
 
+const DBLCLICK_MS = 400
+
 function onPointerDown(e: PointerEvent) {
   const pv = panviewRef.value
   if (!pv || pv.spaceHeld || e.button === 1 || preview.value) return
+
+  // Click outside the edited node commits text editing
+  if (store.editingTextId) {
+    const canvas = pv.viewportToCanvas(e.clientX, e.clientY)
+    const hit = hitTestFrames(canvas.x, canvas.y)
+    if (!hit || hit.nodeId !== store.editingTextId) {
+      store.commitTextEdit()
+      refreshGeometry()
+    }
+    return
+  }
 
   const canvas = pv.viewportToCanvas(e.clientX, e.clientY)
 
@@ -290,6 +307,29 @@ function onPointerDown(e: PointerEvent) {
     store.deselect()
     return
   }
+
+  // Detect double-click on text nodes
+  const now = performance.now()
+  if (
+    now - lastClickTime < DBLCLICK_MS &&
+    lastClickNodeId === hit.nodeId &&
+    hit.nodeId !== hit.frameId
+  ) {
+    const frame = store.findFrameContaining(hit.nodeId)
+    if (frame) {
+      const node = findNode(frame, hit.nodeId)
+      if (node && TEXT_TAGS.has(node.type)) {
+        store.select(hit.nodeId)
+        store.startTextEditing(hit.nodeId)
+        lastClickTime = 0
+        lastClickNodeId = ''
+        e.preventDefault()
+        return
+      }
+    }
+  }
+  lastClickTime = now
+  lastClickNodeId = hit.nodeId
 
   store.select(hit.nodeId, e.shiftKey)
   dragStartCanvas = { x: canvas.x, y: canvas.y }
@@ -385,6 +425,12 @@ function onCanvasPointerMove(e: PointerEvent) {
   pv.style.cursor = handleHit ? CURSORS[handleHit.handle] : ''
 }
 
+function onCommitText(nodeId: string, text: string) {
+  store.updateNodeText(nodeId, [text])
+  store.commitTextEdit()
+  refreshGeometry()
+}
+
 function setIslandRef(frameId: string, comp: InstanceType<typeof Island> | null) {
   if (comp) {
     islandRefs.value[frameId] = comp
@@ -393,14 +439,25 @@ function setIslandRef(frameId: string, comp: InstanceType<typeof Island> | null)
   }
 }
 
+function onKeyDown(e: KeyboardEvent) {
+  if (e.key === 'Escape' && store.editingTextId) {
+    store.commitTextEdit()
+    refreshGeometry()
+  }
+}
+
 onMounted(() => {
   panviewRef.value?.addEventListener('pointerdown', onPointerDown)
   panviewRef.value?.addEventListener('pointermove', onCanvasPointerMove)
+
+  window.addEventListener('keydown', onKeyDown)
 })
 
 onBeforeUnmount(() => {
   panviewRef.value?.removeEventListener('pointerdown', onPointerDown)
   panviewRef.value?.removeEventListener('pointermove', onCanvasPointerMove)
+
+  window.removeEventListener('keydown', onKeyDown)
 })
 </script>
 
@@ -418,8 +475,10 @@ onBeforeUnmount(() => {
       :frame="frame"
       :layout="store.frameLayout[frame.id]"
       :interactive="preview"
+      :editing-text-id="store.editingTextId"
+      @commit-text="onCommitText"
     />
-    <SelectionOverlay v-if="!preview" :rects="selectionRects" :zoom="zoom" />
+    <SelectionOverlay v-if="!preview" :rects="selectionRects" :zoom="zoom" :editing-id="store.editingTextId" />
     <InsertionIndicator :line="insertionLine" :zoom="zoom" />
   </design-panview>
 </template>
