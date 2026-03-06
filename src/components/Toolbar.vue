@@ -60,7 +60,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeyDown))
       </template>
       <span v-else class="px-2 text-xs font-medium text-[#a6adc8]">Preview Mode</span>
     </div>
-    <span class="text-[13px] font-semibold tracking-wide text-[#a6adc8]">OpenPencil</span>
+    <span class="text-[13px] font-semibold tracking-wide text-[#a6adc8]">VuePencil</span>
     <div class="flex items-center gap-3">
       <button
         class="h-7 rounded-md px-3 text-xs font-semibold transition-colors"

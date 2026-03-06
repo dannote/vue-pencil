@@ -1,4 +1,4 @@
-# OpenPencil Vue — Design Document
+# VuePencil — Design Document
 
 A Figma-like visual editor that constructs real Vue components. The design IS Vue. You edit a VNode tree, and the output is a `.vue` SFC that runs.
 
