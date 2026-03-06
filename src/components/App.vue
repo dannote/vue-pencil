@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, provide } from 'vue'
 import { useDocumentStore } from '@/model/document'
 import Toolbar from './Toolbar.vue'
 import LayerPanel from './LayerPanel.vue'
@@ -9,76 +9,193 @@ import Canvas from './Canvas.vue'
 const store = useDocumentStore()
 const canvasRef = ref<InstanceType<typeof Canvas>>()
 const activeTool = ref('select')
-
+const preview = ref(false)
 const zoom = ref(1)
+
+provide('preview', preview)
 
 function onTool(name: string) {
   activeTool.value = name
 }
 
 onMounted(() => {
-  // Demo content
-  const card = store.addFrame(80, 60, 320, 280, {
+  // --- Card frame with interactive button ---
+  const card = store.addFrame(80, 60, 340, 320, {
     display: 'flex',
     flexDirection: 'column',
-    gap: '12px',
-    padding: '24px',
+    gap: '16px',
+    padding: '28px',
     background: 'white',
-    borderRadius: '12px',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+    borderRadius: '16px',
+    boxShadow: '0 4px 24px rgba(0,0,0,0.12)',
     fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
   })
 
   store.addChild(card.id, 'h1', {
     margin: '0',
-    fontSize: '24px',
+    fontSize: '22px',
     fontWeight: '700',
     color: '#1e1e2e',
-  }, ['Hello WebCore'], undefined, 'Heading')
+  }, ['Interactive Card'], undefined, 'Heading')
 
   store.addChild(card.id, 'p', {
     margin: '0',
     fontSize: '14px',
-    color: '#666',
-    lineHeight: '1.5',
-  }, ['Real Vue components on an infinite canvas — VNode tree in, .vue SFC out.'], undefined, 'Description')
+    color: '#6c7086',
+    lineHeight: '1.6',
+  }, ['Switch to Preview mode to interact with buttons and hover states.'], undefined, 'Description')
 
-  store.addChild(card.id, 'button', {
-    padding: '10px 20px',
-    background: '#4361ee',
-    color: 'white',
-    border: 'none',
-    borderRadius: '8px',
-    fontSize: '14px',
-    fontWeight: '600',
-    cursor: 'pointer',
-  }, ['Click me'], undefined, 'Button')
+  // Counter display
+  store.addChild(card.id, 'div', {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+  }, [], undefined, 'Counter Row')
 
+  const counterRow = card.children[card.children.length - 1]
+  if (typeof counterRow !== 'string') {
+    store.addChild(counterRow.id, 'button', {
+      padding: '8px 16px',
+      background: '#4361ee',
+      color: 'white',
+      border: 'none',
+      borderRadius: '8px',
+      fontSize: '14px',
+      fontWeight: '600',
+      cursor: 'pointer',
+      transition: 'background 0.15s, transform 0.1s',
+    }, ['Count: 0'], undefined, 'Counter Button')
+
+    store.addChild(counterRow.id, 'button', {
+      padding: '8px 16px',
+      background: '#f38ba8',
+      color: 'white',
+      border: 'none',
+      borderRadius: '8px',
+      fontSize: '14px',
+      fontWeight: '600',
+      cursor: 'pointer',
+      transition: 'background 0.15s, transform 0.1s',
+    }, ['Reset'], undefined, 'Reset Button')
+  }
+
+  // Toggle switch
+  store.addChild(card.id, 'div', {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+  }, [], undefined, 'Toggle Row')
+
+  const toggleRow = card.children[card.children.length - 1]
+  if (typeof toggleRow !== 'string') {
+    store.addChild(toggleRow.id, 'div', {
+      width: '44px',
+      height: '24px',
+      borderRadius: '12px',
+      background: '#cdd6f4',
+      cursor: 'pointer',
+      transition: 'background 0.2s',
+      position: 'relative',
+    }, [], undefined, 'Toggle Track')
+
+    const track = toggleRow.children[toggleRow.children.length - 1]
+    if (typeof track !== 'string') {
+      store.addChild(track.id, 'div', {
+        width: '20px',
+        height: '20px',
+        borderRadius: '50%',
+        background: 'white',
+        position: 'absolute',
+        top: '2px',
+        left: '2px',
+        transition: 'left 0.2s',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+      }, [], undefined, 'Toggle Knob')
+    }
+
+    store.addChild(toggleRow.id, 'span', {
+      fontSize: '13px',
+      color: '#6c7086',
+    }, ['Dark mode'], undefined, 'Toggle Label')
+  }
+
+  // --- Gradient frame ---
   const gradient = store.addFrame(500, 60, 300, 200, {
     background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    borderRadius: '12px',
+    borderRadius: '16px',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '8px',
+    color: 'white',
+    fontFamily: '-apple-system, sans-serif',
+    cursor: 'pointer',
+    transition: 'transform 0.2s, box-shadow 0.2s',
+  })
+
+  store.addChild(gradient.id, 'span', {
+    fontSize: '20px',
+    fontWeight: '700',
+  }, ['Hover Me'], undefined, 'Title')
+
+  store.addChild(gradient.id, 'span', {
+    fontSize: '13px',
+    opacity: '0.8',
+  }, ['I scale up on hover in preview mode'], undefined, 'Subtitle')
+
+  // --- Circle ---
+  store.addFrame(500, 300, 140, 140, {
+    background: 'linear-gradient(135deg, #ff6b6b, #feca57)',
+    borderRadius: '50%',
+    boxShadow: '0 8px 24px rgba(255,107,107,0.3)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    color: 'white',
     fontFamily: '-apple-system, sans-serif',
-    fontSize: '20px',
+    fontSize: '32px',
+    cursor: 'pointer',
+    transition: 'transform 0.2s',
+    userSelect: 'none',
+  })
+
+  store.addChild(store.frames[2].id, 'span', {}, ['🎨'], undefined, 'Emoji')
+
+  // --- Input frame ---
+  const inputFrame = store.addFrame(80, 420, 340, 120, {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '10px',
+    padding: '20px',
+    background: '#f5f5f5',
+    borderRadius: '12px',
+    fontFamily: '-apple-system, sans-serif',
+  })
+
+  store.addChild(inputFrame.id, 'label', {
+    fontSize: '13px',
     fontWeight: '600',
-  })
+    color: '#45475a',
+  }, ['Type something in preview mode:'], undefined, 'Input Label')
 
-  store.addChild(gradient.id, 'span', {}, ['CSS Gradient Box'], undefined, 'Label')
-
-  store.addFrame(500, 300, 120, 120, {
-    background: '#ff6b6b',
-    borderRadius: '50%',
-    boxShadow: '0 4px 12px rgba(255,107,107,0.4)',
-  })
+  const textInput = store.addChild(inputFrame.id, 'input', {
+    padding: '8px 12px',
+    border: '2px solid #cdd6f4',
+    borderRadius: '8px',
+    fontSize: '14px',
+    outline: 'none',
+    transition: 'border-color 0.15s',
+  }, [], undefined, 'Text Input')
+  if (textInput) {
+    textInput.props.type = 'text'
+    textInput.props.placeholder = 'Hello world...'
+  }
 })
 </script>
 
 <template>
-  <Toolbar :zoom="zoom" :active-tool="activeTool" @tool="onTool" />
-  <LayerPanel :frames="store.frames" />
+  <Toolbar :zoom="zoom" :active-tool="activeTool" :preview="preview" @tool="onTool" @update:preview="preview = $event" />
+  <LayerPanel v-if="!preview" :frames="store.frames" />
   <Canvas ref="canvasRef" />
-  <PropertiesPanel />
+  <PropertiesPanel v-if="!preview" />
 </template>

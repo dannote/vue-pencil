@@ -6,6 +6,7 @@ import { mountIsland, type IslandApp } from '@/renderer/island-renderer'
 const props = defineProps<{
   frame: DesignNode
   layout: FrameLayout
+  interactive: boolean
 }>()
 
 const iframeRef = ref<HTMLIFrameElement>()
@@ -62,7 +63,10 @@ defineExpose({
         background: 'transparent',
       }"
     />
-    <!-- Shield: blocks pointer events in edit mode -->
-    <div style="position: absolute; inset: 0; z-index: 1" />
+    <!-- Shield: blocks pointer events in edit mode, removed in preview -->
+    <div
+      v-if="!interactive"
+      style="position: absolute; inset: 0; z-index: 1"
+    />
   </div>
 </template>

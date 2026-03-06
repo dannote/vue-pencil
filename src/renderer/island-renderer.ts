@@ -37,7 +37,14 @@ export function mountIsland(iframe: HTMLIFrameElement, initialTree: DesignNode):
   const doc = iframe.contentDocument!
   doc.open()
   doc.write(
-    '<!DOCTYPE html><html><head><style>*,*::before,*::after{box-sizing:border-box}html,body,#root{margin:0;height:100%;background:transparent}</style></head><body><div id="root"></div></body></html>',
+    `<!DOCTYPE html><html><head><style>
+*,*::before,*::after{box-sizing:border-box}
+html,body,#root{margin:0;height:100%;background:transparent}
+button:hover{filter:brightness(1.1)}
+button:active{transform:scale(0.97)}
+input:focus{border-color:#4361ee !important}
+[style*="cursor: pointer"]:hover{transform:scale(1.03)}
+</style></head><body><div id="root"></div></body></html>`,
   )
   doc.close()
 
