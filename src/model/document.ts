@@ -1,12 +1,16 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { DesignNode, FrameLayout, ComponentDef } from './types'
+import type { Binding, BindingSource, BindingTarget, CapabilityInstance, DesignNode, FrameLayout, ComponentDef } from './types'
+import { createCapabilityInstance } from './capabilities'
+import { createLibraryNode } from './library'
 import { nodeId, createNode, findNode, findParent, removeNode, insertChild } from './operations'
 
 export const useDocumentStore = defineStore('document', () => {
   const frames = ref<DesignNode[]>([])
   const frameLayout = ref<Record<string, FrameLayout>>({})
   const componentDefs = ref<ComponentDef[]>([])
+  const capabilities = ref<CapabilityInstance[]>([])
+  const bindings = ref<Binding[]>([])
 
   const selectedIds = ref<Set<string>>(new Set())
   const hoveredId = ref<string | null>(null)
@@ -156,10 +160,79 @@ export const useDocumentStore = defineStore('document', () => {
     editingTextId.value = null
   }
 
+  function addCapability(definitionId: string, targetNodeId?: string): CapabilityInstance {
+    const capability = createCapabilityInstance(definitionId, targetNodeId)
+    capabilities.value.push(capability)
+    return capability
+  }
+
+  function removeCapability(id: string): void {
+    const index = capabilities.value.findIndex((capability) => capability.id === id)
+    if (index !== -1) capabilities.value.splice(index, 1)
+  }
+
+  function capabilitiesForNode(nodeIdVal: string): CapabilityInstance[] {
+    return capabilities.value.filter((capability) => capability.targetNodeId === nodeIdVal)
+  }
+
+  function insertLibraryComponent(componentId: string): DesignNode | null {
+    const node = createLibraryNode(componentId)
+    const selected = selectedNodes.value[0]
+
+    if (selected) {
+      insertChild(selected, node)
+      select(node.id)
+      return node
+    }
+
+    const frame = frames.value[0] ?? addFrame(80, 60, 160, 100, {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: 'white',
+      borderRadius: '12px',
+    })
+
+    insertChild(frame, node)
+    select(node.id)
+    return node
+  }
+
+  function addBinding(target: BindingTarget, source: BindingSource): Binding {
+    const existing = bindings.value.find((binding) => sameTarget(binding.target, target))
+    if (existing) {
+      existing.source = source
+      return existing
+    }
+
+    const binding: Binding = {
+      id: `bind_${crypto.randomUUID().slice(0, 8)}`,
+      target,
+      source,
+    }
+    bindings.value.push(binding)
+    return binding
+  }
+
+  function removeBinding(id: string): void {
+    const index = bindings.value.findIndex((binding) => binding.id === id)
+    if (index !== -1) bindings.value.splice(index, 1)
+  }
+
+  function bindingForTarget(target: BindingTarget): Binding | undefined {
+    return bindings.value.find((binding) => sameTarget(binding.target, target))
+  }
+
+  function bindingsForNode(nodeIdVal: string): Binding[] {
+    return bindings.value.filter((binding) => 'nodeId' in binding.target && binding.target.nodeId === nodeIdVal)
+  }
+
   return {
     frames,
     frameLayout,
     componentDefs,
+    capabilities,
+    bindings,
     selectedIds,
     selectedNodes,
     hoveredId,
@@ -177,5 +250,30 @@ export const useDocumentStore = defineStore('document', () => {
     updateNodeText,
     startTextEditing,
     commitTextEdit,
+    addCapability,
+    removeCapability,
+    capabilitiesForNode,
+    insertLibraryComponent,
+    addBinding,
+    removeBinding,
+    bindingForTarget,
+    bindingsForNode,
   }
 })
+
+function sameTarget(left: BindingTarget, right: BindingTarget): boolean {
+  if (left.kind !== right.kind) return false
+
+  if (left.kind === 'style' && right.kind === 'style') {
+    return left.nodeId === right.nodeId && left.property === right.property
+  }
+
+  if (left.kind === 'prop' && right.kind === 'prop') {
+    return left.nodeId === right.nodeId && left.prop === right.prop
+  }
+
+  if (left.kind === 'text' && right.kind === 'text') return left.nodeId === right.nodeId
+  if (left.kind === 'visibility' && right.kind === 'visibility') return left.nodeId === right.nodeId
+
+  return left.kind === 'variant' && right.kind === 'variant' && left.componentId === right.componentId && left.axis === right.axis
+}

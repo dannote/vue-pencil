@@ -1,20 +1,45 @@
 import { createApp, h, ref, type VNode, type App, type Ref } from 'vue'
-import type { DesignNode } from '@/model/types'
+import { SwitchRoot, SwitchThumb } from 'reka-ui'
+import type { Binding, CapabilityInstance, DesignNode } from '@/model/types'
+import { bindingPreviewValue, styleBindingPreview, textBindingPreview } from './preview-values'
 
-function renderDesignNode(node: DesignNode | string): VNode | string {
+export interface IslandRuntime {
+  capabilities: CapabilityInstance[]
+  bindings: Binding[]
+}
+
+const COMPONENTS: Record<string, unknown> = {
+  SwitchRoot,
+  SwitchThumb,
+}
+
+function renderDesignNode(node: DesignNode | string, runtime: IslandRuntime): VNode | string {
   if (typeof node === 'string') return node
 
-  const children = node.children.map(renderDesignNode)
+  const textBinding = runtime.bindings.find((binding) => binding.target.kind === 'text' && binding.target.nodeId === node.id)
+  const children = textBinding ? [textBindingPreview(textBinding, runtime.capabilities)] : node.children.map((child) => renderDesignNode(child, runtime))
 
   const props: Record<string, unknown> = {
     'data-node-id': node.id,
   }
 
-  if (node.props.style) {
-    props.style = { ...node.props.style }
+  const style = { ...(node.props.style ?? {}) }
+  for (const binding of runtime.bindings) {
+    if (binding.target.kind !== 'style' || binding.target.nodeId !== node.id) continue
+    const value = styleBindingPreview(binding, runtime.capabilities)
+    if (value !== undefined) style[binding.target.property] = value
   }
+  if (Object.keys(style).length > 0) props.style = style
   if (node.props.class) {
     props.class = node.props.class
+  }
+
+  for (const binding of runtime.bindings) {
+    if (binding.target.kind !== 'prop' || binding.target.nodeId !== node.id || binding.transform) continue
+    const propName = binding.target.prop.replace(/^:/, '')
+    if (propName === 'v-model' || propName.startsWith('v-model:') || propName.startsWith('@')) continue
+    const value = bindingPreviewValue(binding, runtime.capabilities)
+    if (value !== undefined) props[propName] = value
   }
 
   // Forward remaining props (excluding style/class which are handled above)
@@ -24,18 +49,19 @@ function renderDesignNode(node: DesignNode | string): VNode | string {
     }
   }
 
-  return h(node.type, props, children.length > 0 ? children : undefined)
+  return h(COMPONENTS[node.type] ?? node.type, props, children.length > 0 ? children : undefined)
 }
 
 export interface IslandApp {
   app: App
   tree: Ref<DesignNode>
+  runtime: Ref<IslandRuntime>
   destroy: () => void
 }
 
 export const ISLAND_BLEED = 40
 
-export function mountIsland(iframe: HTMLIFrameElement, initialTree: DesignNode): IslandApp {
+export function mountIsland(iframe: HTMLIFrameElement, initialTree: DesignNode, initialRuntime: IslandRuntime): IslandApp {
   const doc = iframe.contentDocument!
   doc.open()
   doc.write(
@@ -53,11 +79,12 @@ input:focus{border-color:#4361ee !important}
   doc.close()
 
   const tree: Ref<DesignNode> = ref(initialTree) as Ref<DesignNode>
+  const runtime: Ref<IslandRuntime> = ref(initialRuntime) as Ref<IslandRuntime>
 
   const app = createApp({
     setup() {
       return () => {
-        const vnode = renderDesignNode(tree.value)
+        const vnode = renderDesignNode(tree.value, runtime.value)
         // Root element fills the island
         if (typeof vnode !== 'string' && vnode.props) {
           vnode.props.style = { width: '100%', height: '100%', ...vnode.props.style }
@@ -72,6 +99,7 @@ input:focus{border-color:#4361ee !important}
   return {
     app,
     tree,
+    runtime,
     destroy() {
       app.unmount()
     },

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
-import type { DesignNode, FrameLayout } from '@/model/types'
+import type { Binding, CapabilityInstance, DesignNode, FrameLayout } from '@/model/types'
 import { mountIsland, type IslandApp } from '@/renderer/island-renderer'
 
 const props = defineProps<{
@@ -8,6 +8,8 @@ const props = defineProps<{
   layout: FrameLayout
   interactive: boolean
   editingTextId: string | null
+  capabilities: CapabilityInstance[]
+  bindings: Binding[]
 }>()
 
 const emit = defineEmits<{
@@ -89,7 +91,10 @@ onMounted(() => {
   if (!iframe) return
 
   iframe.addEventListener('load', () => {
-    islandApp = mountIsland(iframe, props.frame)
+    islandApp = mountIsland(iframe, props.frame, {
+      capabilities: props.capabilities,
+      bindings: props.bindings,
+    })
   }, { once: true })
 })
 
@@ -97,6 +102,14 @@ watch(
   () => props.frame,
   (newTree) => {
     if (islandApp) islandApp.tree.value = newTree
+  },
+  { deep: true },
+)
+
+watch(
+  () => [props.capabilities, props.bindings] as const,
+  ([capabilities, bindings]) => {
+    if (islandApp) islandApp.runtime.value = { capabilities, bindings }
   },
   { deep: true },
 )

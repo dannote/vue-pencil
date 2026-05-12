@@ -685,6 +685,8 @@ onBeforeUnmount(() => {
       :layout="store.frameLayout[frame.id]"
       :interactive="preview"
       :editing-text-id="store.editingTextId"
+      :capabilities="store.capabilities"
+      :bindings="store.bindings"
       @commit-text="onCommitText"
     />
     <SelectionOverlay v-if="!preview" :rects="selectionRects" :zoom="zoom" :editing-id="store.editingTextId" />

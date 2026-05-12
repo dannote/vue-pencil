@@ -11,6 +11,9 @@ import FillSection from './properties/FillSection.vue'
 import BorderSection from './properties/BorderSection.vue'
 import EffectsSection from './properties/EffectsSection.vue'
 import CodeSection from './properties/CodeSection.vue'
+import BehaviorSection from './properties/BehaviorSection.vue'
+import BindingSection from './properties/BindingSection.vue'
+import ComponentSection from './properties/ComponentSection.vue'
 
 const store = useDocumentStore()
 
@@ -58,6 +61,10 @@ function onFrameChange(prop: keyof FrameLayout, value: number) {
         <span class="text-xs font-semibold text-[#cdd6f4]">{{ node.meta.name ?? node.type }}</span>
       </div>
 
+      <ComponentSection :node="node" />
+      <BehaviorSection :node="node" />
+      <BindingSection :node="node" />
+      <CodeSection :node="node" />
       <PositionSection
         :node="node"
         :layout="layout"
@@ -88,7 +95,6 @@ function onFrameChange(prop: keyof FrameLayout, value: number) {
         :node="node"
         @style="onStyleChange"
       />
-      <CodeSection :node="node" />
     </template>
 
     <div v-else class="px-4 py-8 text-center text-xs text-[#a6adc8]">
