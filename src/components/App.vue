@@ -191,6 +191,115 @@ onMounted(() => {
     textInput.props.type = 'text'
     textInput.props.placeholder = 'Hello world...'
   }
+
+  // --- Capability demo ---
+  const capabilityFrame = store.addFrame(460, 430, 300, 260, {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '14px',
+    padding: '20px',
+    background: '#111827',
+    color: 'white',
+    borderRadius: '18px',
+    boxShadow: '0 18px 40px rgba(0,0,0,0.28)',
+    fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
+  })
+
+  store.addChild(capabilityFrame.id, 'div', {
+    display: 'inline-flex',
+    alignSelf: 'flex-start',
+    padding: '4px 8px',
+    borderRadius: '999px',
+    background: 'rgba(148, 226, 213, 0.16)',
+    color: '#94e2d5',
+    fontSize: '11px',
+    fontWeight: '700',
+    letterSpacing: '0.04em',
+    textTransform: 'uppercase',
+  }, ['VueUse + Reka'], undefined, 'Badge')
+
+  store.addChild(capabilityFrame.id, 'h2', {
+    margin: '0',
+    fontSize: '21px',
+    lineHeight: '1.1',
+    fontWeight: '800',
+  }, ['Bound component instance'], undefined, 'Title')
+
+  store.addChild(capabilityFrame.id, 'p', {
+    margin: '0',
+    color: '#cbd5e1',
+    fontSize: '13px',
+    lineHeight: '1.5',
+  }, ['This switch is a library component. Its Value property is bound to the Dark mode capability.'], undefined, 'Description')
+
+  const switchRow = store.addChild(capabilityFrame.id, 'div', {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '12px',
+    padding: '14px',
+    borderRadius: '14px',
+    background: 'rgba(255,255,255,0.08)',
+  }, [], undefined, 'Switch Binding Row')
+
+  if (switchRow) {
+    store.addChild(switchRow.id, 'span', {
+      fontSize: '14px',
+      fontWeight: '650',
+      color: '#f8fafc',
+    }, ['Dark mode'], undefined, 'Switch Label')
+
+    const switchRoot = store.addChild(switchRow.id, 'SwitchRoot', {
+      width: '44px',
+      height: '24px',
+      borderRadius: '999px',
+      background: '#cdd6f4',
+      border: 'none',
+      padding: '2px',
+      display: 'inline-flex',
+      alignItems: 'center',
+      cursor: 'pointer',
+      transition: 'background 0.2s',
+    }, [], undefined, 'Switch')
+
+    if (switchRoot) {
+      switchRoot.meta.source = { kind: 'library', library: 'reka-ui', component: 'Switch', part: 'root' }
+      switchRoot.props.value = 'on'
+
+      const thumb = store.addChild(switchRoot.id, 'SwitchThumb', {
+        width: '20px',
+        height: '20px',
+        borderRadius: '999px',
+        background: 'white',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+        transition: 'transform 0.2s',
+      }, [], undefined, 'Thumb')
+      if (thumb) thumb.meta.source = { kind: 'library', library: 'reka-ui', component: 'Switch', part: 'thumb' }
+
+      const darkMode = store.addCapability('theme.dark-mode')
+      store.addBinding(
+        { kind: 'prop', nodeId: switchRoot.id, prop: 'v-model' },
+        { kind: 'capability-output', capabilityId: darkMode.id, outputId: darkMode.outputs[0].id },
+      )
+    }
+  }
+
+  const metric = store.addChild(capabilityFrame.id, 'div', {
+    padding: '12px 14px',
+    borderRadius: '12px',
+    background: 'rgba(67, 97, 238, 0.22)',
+    color: '#bfdbfe',
+    fontSize: '13px',
+    fontWeight: '700',
+  }, ['Width preview'], undefined, 'Width Metric')
+
+  if (metric) {
+    const size = store.addCapability('element.size', metric.id)
+    store.addBinding(
+      { kind: 'text', nodeId: metric.id },
+      { kind: 'capability-output', capabilityId: size.id, outputId: size.outputs[0].id },
+    )
+  }
 })
 </script>
 
