@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import type { DesignNode } from '@/model/types'
+import { nodeDisplayName } from '@/model/display'
 import { LIBRARY_COMPONENTS } from '@/model/library'
 import { useDocumentStore } from '@/model/document'
 
@@ -20,7 +21,7 @@ const libraryGroups = computed(() => {
 })
 
 function nodeLabel(node: DesignNode): string {
-  return node.meta.name ?? `<${node.type}>`
+  return nodeDisplayName(node)
 }
 
 function isSelected(id: string): boolean {

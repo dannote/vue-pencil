@@ -4,6 +4,7 @@ import type { Binding, BindingSource, BindingTarget, CapabilityInstance, DesignN
 import { createCapabilityInstance } from './capabilities'
 import { createLibraryNode } from './library'
 import { nodeId, createNode, findNode, findParent, removeNode, insertChild } from './operations'
+import { isLibraryInstanceRoot } from './display'
 
 export const useDocumentStore = defineStore('document', () => {
   const frames = ref<DesignNode[]>([])
@@ -177,25 +178,36 @@ export const useDocumentStore = defineStore('document', () => {
 
   function insertLibraryComponent(componentId: string): DesignNode | null {
     const node = createLibraryNode(componentId)
-    const selected = selectedNodes.value[0]
+    const target = libraryInsertTarget()
 
-    if (selected) {
-      insertChild(selected, node)
-      select(node.id)
-      return node
+    insertChild(target, node)
+    select(node.id)
+    return node
+  }
+
+  function libraryInsertTarget(): DesignNode {
+    const selected = selectedNodes.value[0]
+    if (!selected) return frames.value[0] ?? addDefaultLibraryFrame()
+
+    if (frames.value.some((frame) => frame.id === selected.id)) return selected
+    if (isContainerNode(selected) && !isLibraryInstanceRoot(selected)) return selected
+
+    for (const frame of frames.value) {
+      const parent = findParent(frame, selected.id)
+      if (parent) return parent.parent
     }
 
-    const frame = frames.value[0] ?? addFrame(80, 60, 160, 100, {
+    return frames.value[0] ?? addDefaultLibraryFrame()
+  }
+
+  function addDefaultLibraryFrame(): DesignNode {
+    return addFrame(80, 60, 160, 100, {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       background: 'white',
       borderRadius: '12px',
     })
-
-    insertChild(frame, node)
-    select(node.id)
-    return node
   }
 
   function addBinding(target: BindingTarget, source: BindingSource): Binding {
@@ -260,6 +272,10 @@ export const useDocumentStore = defineStore('document', () => {
     bindingsForNode,
   }
 })
+
+function isContainerNode(node: DesignNode): boolean {
+  return !['input', 'img', 'br', 'hr'].includes(node.type)
+}
 
 function sameTarget(left: BindingTarget, right: BindingTarget): boolean {
   if (left.kind !== right.kind) return false

@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import type { DesignNode, FrameLayout } from '@/model/types'
 import { useDocumentStore } from '@/model/document'
+import { nodeDisplayDetail, nodeDisplayKind, nodeDisplayName } from '@/model/display'
 
 import PositionSection from './properties/PositionSection.vue'
 import LayoutSection from './properties/LayoutSection.vue'
@@ -57,8 +58,9 @@ function onFrameChange(prop: keyof FrameLayout, value: number) {
     <template v-if="node">
       <!-- Header -->
       <div class="flex items-center gap-1.5 border-b border-[#313244] px-4 py-2">
-        <span class="text-[11px] text-[#a6adc8]">&lt;{{ node.type }}&gt;</span>
-        <span class="text-xs font-semibold text-[#cdd6f4]">{{ node.meta.name ?? node.type }}</span>
+        <span class="text-[11px] text-[#a6adc8]">{{ nodeDisplayKind(node) }}</span>
+        <span class="text-xs font-semibold text-[#cdd6f4]">{{ nodeDisplayName(node) }}</span>
+        <span v-if="nodeDisplayDetail(node)" class="text-[10px] text-[#6c7086]">{{ nodeDisplayDetail(node) }}</span>
       </div>
 
       <ComponentSection :node="node" />
