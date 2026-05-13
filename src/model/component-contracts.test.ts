@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { componentPropertyTarget, getComponentContract } from './component-contracts'
+import { componentPartNodes, componentPropertyTarget, getComponentContract } from './component-contracts'
 import type { DesignNode } from './types'
 
 const switchNode: DesignNode = {
@@ -28,5 +28,27 @@ describe('component contracts', () => {
       nodeId: 'switch',
       prop: 'v-model',
     })
+  })
+
+  it('finds semantic Switch parts', () => {
+    const thumb: DesignNode = {
+      id: 'thumb',
+      type: 'SwitchThumb',
+      props: {},
+      children: [],
+      meta: { name: 'Thumb', source: { kind: 'library', library: 'reka-ui', component: 'Switch', part: 'thumb' } },
+    }
+    const root: DesignNode = {
+      ...switchNode,
+      meta: { name: 'Switch', source: { kind: 'library', library: 'reka-ui', component: 'Switch', part: 'root' } },
+      children: [thumb],
+    }
+
+    const contract = getComponentContract(root)
+
+    expect(componentPartNodes(root, contract!).map((part) => [part.contract.label, part.node.id])).toEqual([
+      ['Track', 'switch'],
+      ['Thumb', 'thumb'],
+    ])
   })
 })

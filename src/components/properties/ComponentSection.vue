@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import type { ComponentPropertyContract } from '@/model/component-contracts'
 import type { DesignNode } from '@/model/types'
 import { bindableValues, bindingSourceId } from '@/model/bindings'
-import { componentPropertyTarget, getComponentContract } from '@/model/component-contracts'
+import { componentPartNodes, componentPropertyTarget, getComponentContract } from '@/model/component-contracts'
 import { useDocumentStore } from '@/model/document'
 import SectionHeader from './SectionHeader.vue'
 
@@ -14,6 +14,7 @@ const props = defineProps<{
 const store = useDocumentStore()
 const contract = computed(() => getComponentContract(props.node))
 const values = computed(() => bindableValues(store.capabilities, store.frames))
+const parts = computed(() => contract.value ? componentPartNodes(props.node, contract.value) : [])
 
 function propertyValues(property: ComponentPropertyContract) {
   return values.value.filter((value) => property.accepts.includes(value.type))
@@ -52,6 +53,21 @@ function bindProperty(property: ComponentPropertyContract, sourceId: string) {
         <span class="rounded-full bg-[#313244] px-2 py-0.5 text-[10px] text-[#94e2d5]">
           Instance
         </span>
+      </div>
+
+      <div v-if="parts.length > 0" class="mt-3 space-y-1.5">
+        <div class="text-[10px] font-medium uppercase tracking-wide text-[#6c7086]">Parts</div>
+        <div class="grid grid-cols-2 gap-1.5">
+          <button
+            v-for="part in parts"
+            :key="part.contract.id"
+            class="rounded-md border border-[#45475a] bg-[#11111b] px-2 py-1.5 text-left text-[11px] text-[#cdd6f4] transition-colors hover:border-[#89b4fa] hover:bg-[#313244]"
+            :class="store.selectedIds.has(part.node.id) ? 'border-[#89b4fa] bg-[#313244]' : ''"
+            @click="store.select(part.node.id)"
+          >
+            {{ part.contract.label }}
+          </button>
+        </div>
       </div>
 
       <div class="mt-3 space-y-2">

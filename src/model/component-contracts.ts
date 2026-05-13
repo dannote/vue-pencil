@@ -8,11 +8,24 @@ export interface ComponentPropertyContract {
   accepts: CapabilityValueType[]
 }
 
+export interface ComponentPartContract {
+  id: string
+  label: string
+  nodeType: string
+  part: string
+}
+
+export interface ComponentPartNode {
+  contract: ComponentPartContract
+  node: DesignNode
+}
+
 export interface ComponentContract {
   type: string
   label: string
   library: string
   properties: ComponentPropertyContract[]
+  parts: ComponentPartContract[]
 }
 
 export const COMPONENT_CONTRACTS: ComponentContract[] = [
@@ -36,6 +49,10 @@ export const COMPONENT_CONTRACTS: ComponentContract[] = [
         accepts: ['boolean'],
       },
     ],
+    parts: [
+      { id: 'track', label: 'Track', nodeType: 'SwitchRoot', part: 'root' },
+      { id: 'thumb', label: 'Thumb', nodeType: 'SwitchThumb', part: 'thumb' },
+    ],
   },
 ]
 
@@ -45,4 +62,25 @@ export function getComponentContract(node: DesignNode): ComponentContract | unde
 
 export function componentPropertyTarget(node: DesignNode, property: ComponentPropertyContract): BindingTarget {
   return { kind: 'prop', nodeId: node.id, prop: property.targetProp }
+}
+
+export function componentPartNodes(root: DesignNode, contract: ComponentContract): ComponentPartNode[] {
+  return contract.parts.flatMap((part) => {
+    const node = findPartNode(root, part)
+    return node ? [{ contract: part, node }] : []
+  })
+}
+
+function findPartNode(node: DesignNode, part: ComponentPartContract): DesignNode | undefined {
+  if (node.type === part.nodeType && node.meta.source?.kind === 'library' && node.meta.source.part === part.part) {
+    return node
+  }
+
+  for (const child of node.children) {
+    if (typeof child === 'string') continue
+    const found = findPartNode(child, part)
+    if (found) return found
+  }
+
+  return undefined
 }
