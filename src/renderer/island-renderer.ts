@@ -73,6 +73,8 @@ button:hover{filter:brightness(1.1)}
 button:active{transform:scale(0.97)}
 input:focus{border-color:#4361ee !important}
 [style*="cursor: pointer"]:hover{transform:scale(1.03)}
+.vp-switch-root[data-state="checked"]{background:#4361ee!important}
+.vp-switch-root[data-state="checked"] .vp-switch-thumb{transform:translateX(20px)}
 [contenteditable]{user-select:text;-webkit-user-select:text}
 </style></head><body><div id="root"></div></body></html>`,
   )

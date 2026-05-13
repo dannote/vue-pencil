@@ -30,6 +30,21 @@ function onViewportChange() {
   if (panviewRef.value) zoom.value = panviewRef.value.zoom
 }
 
+function onLibraryDrop(event: DragEvent) {
+  const pv = panviewRef.value
+  if (!pv) return
+
+  const componentId = event.dataTransfer?.getData('application/x-vue-pencil-library-component')
+    || event.dataTransfer?.getData('text/plain')
+  if (!componentId) return
+
+  event.preventDefault()
+  const canvas = pv.viewportToCanvas(event.clientX, event.clientY)
+  const hit = hitTestFrames(canvas.x, canvas.y)
+  store.insertLibraryComponentAt(componentId, canvas.x, canvas.y, hit?.nodeId)
+  refreshGeometry()
+}
+
 // --- Selection rects ---
 
 const geometryVersion = ref(0)
@@ -332,6 +347,7 @@ let dragId = ''
 let dragHitFrameId = ''
 let activeHandle: Handle | null = null
 let dragStartCanvas = { x: 0, y: 0 }
+let lastDragCanvas = { x: 0, y: 0 }
 let startRect = { x: 0, y: 0, w: 0, h: 0 }
 let lastClickTime = 0
 let lastClickNodeId = ''
@@ -458,6 +474,7 @@ function onPointerMove(e: PointerEvent) {
   if (!pv) return
 
   const canvas = pv.viewportToCanvas(e.clientX, e.clientY)
+  lastDragCanvas = { x: canvas.x, y: canvas.y }
 
   if (mode === 'drawing' && drawState) {
     const x = Math.min(drawState.startX, canvas.x)
@@ -527,7 +544,7 @@ function onPointerMove(e: PointerEvent) {
   }
 }
 
-function onPointerUp() {
+function onPointerUp(e?: PointerEvent) {
   if (mode === 'drawing' && drawState && drawPreview.value) {
     const { x, y, width, height } = drawPreview.value
     createNodeFromTool(drawState.tool, x, y, width, height)
@@ -543,6 +560,21 @@ function onPointerUp() {
     store.moveNodeTo(dragId, dropTarget.value.parentId, dropTarget.value.index)
     store.select(dragId)
     refreshGeometry()
+  } else if (mode === 'drag-element' && e) {
+    const pv = panviewRef.value
+    const canvas = pv ? pv.viewportToCanvas(e.clientX, e.clientY) : lastDragCanvas
+    const sourceLayout = store.frameLayout[dragHitFrameId]
+    const outsideSource = sourceLayout && (
+      canvas.x < sourceLayout.x ||
+      canvas.x > sourceLayout.x + sourceLayout.width ||
+      canvas.y < sourceLayout.y ||
+      canvas.y > sourceLayout.y + sourceLayout.height
+    )
+
+    if (outsideSource) {
+      store.extractNodeToFrame(dragId, canvas.x, canvas.y)
+      refreshGeometry()
+    }
   }
 
   mode = 'none'
@@ -676,6 +708,8 @@ onBeforeUnmount(() => {
     class="fixed top-10 left-60 right-72 bottom-0"
     style="background: #181825"
     @viewportchange="onViewportChange"
+    @dragover.prevent
+    @drop="onLibraryDrop"
   >
     <Island
       v-for="frame in store.frames"

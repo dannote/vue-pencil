@@ -185,6 +185,36 @@ export const useDocumentStore = defineStore('document', () => {
     return node
   }
 
+  function insertLibraryComponentAt(componentId: string, x: number, y: number, targetNodeId?: string): DesignNode | null {
+    const node = createLibraryNode(componentId)
+    const target = targetNodeId ? findNodeInDocument(targetNodeId) : null
+
+    if (target && isContainerNode(target) && !isLibraryInstanceRoot(target)) {
+      insertChild(target, node)
+      select(node.id)
+      return node
+    }
+
+    const frame = addFrame(x, y, 120, 80, {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: 'white',
+      borderRadius: '12px',
+    })
+    insertChild(frame, node)
+    select(node.id)
+    return node
+  }
+
+  function findNodeInDocument(id: string): DesignNode | null {
+    for (const frame of frames.value) {
+      const node = findNode(frame, id)
+      if (node) return node
+    }
+    return null
+  }
+
   function libraryInsertTarget(): DesignNode {
     const selected = selectedNodes.value[0]
     if (!selected) return frames.value[0] ?? addDefaultLibraryFrame()
@@ -208,6 +238,36 @@ export const useDocumentStore = defineStore('document', () => {
       background: 'white',
       borderRadius: '12px',
     })
+  }
+
+  function extractNodeToFrame(nodeIdVal: string, x: number, y: number): DesignNode | null {
+    let extracted: DesignNode | null = null
+    let sourceFrame: DesignNode | null = null
+
+    for (const frame of frames.value) {
+      extracted = removeNode(frame, nodeIdVal)
+      if (extracted) {
+        sourceFrame = frame
+        break
+      }
+    }
+
+    if (!extracted) return null
+
+    const width = parseInt(String(extracted.props.style?.width ?? '140'), 10) || 140
+    const height = parseInt(String(extracted.props.style?.height ?? '80'), 10) || 80
+    const frame = addFrame(x, y, Math.max(width + 32, 80), Math.max(height + 32, 60), {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: 'white',
+      borderRadius: '12px',
+    })
+    insertChild(frame, extracted)
+
+    if (sourceFrame && sourceFrame.children.length === 0) removeFrame(sourceFrame.id)
+    select(extracted.id)
+    return frame
   }
 
   function addBinding(target: BindingTarget, source: BindingSource): Binding {
@@ -266,6 +326,8 @@ export const useDocumentStore = defineStore('document', () => {
     removeCapability,
     capabilitiesForNode,
     insertLibraryComponent,
+    insertLibraryComponentAt,
+    extractNodeToFrame,
     addBinding,
     removeBinding,
     bindingForTarget,

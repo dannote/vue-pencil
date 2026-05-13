@@ -39,7 +39,8 @@ function createSwitchNode(): DesignNode {
     transition: 'background 0.2s',
   }, [], 'Switch')
 
-  root.props.value = 'on'
+  root.props.defaultValue = false
+  root.props.class = 'vp-switch-root'
   root.meta.source = {
     kind: 'library',
     library: 'reka-ui',
@@ -55,6 +56,8 @@ function createSwitchNode(): DesignNode {
     boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
     transition: 'transform 0.2s',
   }, [], 'Thumb')
+
+  thumb.props.class = 'vp-switch-thumb'
 
   thumb.meta.source = {
     kind: 'library',

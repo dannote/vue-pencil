@@ -27,6 +27,12 @@ function nodeLabel(node: DesignNode): string {
 function isSelected(id: string): boolean {
   return store.selectedIds.has(id)
 }
+
+function onLibraryDragStart(event: DragEvent, componentId: string) {
+  event.dataTransfer?.setData('application/x-vue-pencil-library-component', componentId)
+  event.dataTransfer?.setData('text/plain', componentId)
+  if (event.dataTransfer) event.dataTransfer.effectAllowed = 'copy'
+}
 </script>
 
 <template>
@@ -89,6 +95,8 @@ function isSelected(id: string): boolean {
             :key="component.id"
             class="w-full rounded-lg border border-[#45475a] bg-[#181825] p-3 text-left transition-colors hover:border-[#89b4fa] hover:bg-[#313244]"
             :title="component.description"
+            draggable="true"
+            @dragstart="onLibraryDragStart($event, component.id)"
             @click="store.insertLibraryComponent(component.id)"
           >
             <div class="text-xs font-semibold text-[#cdd6f4]">{{ component.name }}</div>

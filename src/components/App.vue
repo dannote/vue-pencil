@@ -264,7 +264,8 @@ onMounted(() => {
 
     if (switchRoot) {
       switchRoot.meta.source = { kind: 'library', library: 'reka-ui', component: 'Switch', part: 'root' }
-      switchRoot.props.value = 'on'
+      switchRoot.props.defaultValue = false
+      switchRoot.props.class = 'vp-switch-root'
 
       const thumb = store.addChild(switchRoot.id, 'SwitchThumb', {
         width: '20px',
@@ -274,7 +275,10 @@ onMounted(() => {
         boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
         transition: 'transform 0.2s',
       }, [], undefined, 'Thumb')
-      if (thumb) thumb.meta.source = { kind: 'library', library: 'reka-ui', component: 'Switch', part: 'thumb' }
+      if (thumb) {
+        thumb.props.class = 'vp-switch-thumb'
+        thumb.meta.source = { kind: 'library', library: 'reka-ui', component: 'Switch', part: 'thumb' }
+      }
 
       const darkMode = store.addCapability('theme.dark-mode')
       store.addBinding(
