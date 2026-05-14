@@ -15,6 +15,7 @@ import CodeSection from './properties/CodeSection.vue'
 import BehaviorSection from './properties/BehaviorSection.vue'
 import BindingSection from './properties/BindingSection.vue'
 import ComponentSection from './properties/ComponentSection.vue'
+import ComponentToolsSection from './properties/ComponentToolsSection.vue'
 
 const store = useDocumentStore()
 
@@ -64,6 +65,7 @@ function onFrameChange(prop: keyof FrameLayout, value: number) {
       </div>
 
       <ComponentSection :node="node" />
+      <ComponentToolsSection :node="node" />
       <BehaviorSection :node="node" />
       <BindingSection :node="node" />
       <CodeSection :node="node" />

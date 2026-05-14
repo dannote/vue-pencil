@@ -12,9 +12,26 @@ defineProps<{
 const store = useDocumentStore()
 const tab = ref<'layers' | 'library'>('layers')
 
+interface LibraryListItem {
+  id: string
+  name: string
+  group: string
+  description: string
+}
+
 const libraryGroups = computed(() => {
-  const groups = new Map<string, typeof LIBRARY_COMPONENTS>()
-  for (const component of LIBRARY_COMPONENTS) {
+  const items: LibraryListItem[] = [
+    ...LIBRARY_COMPONENTS,
+    ...store.componentDefs.map((component) => ({
+      id: `local:${component.id}`,
+      name: component.name,
+      group: 'Local components',
+      description: 'Component created from this file.',
+    })),
+  ]
+
+  const groups = new Map<string, LibraryListItem[]>()
+  for (const component of items) {
     groups.set(component.group, [...(groups.get(component.group) ?? []), component])
   }
   return [...groups.entries()].map(([name, components]) => ({ name, components }))

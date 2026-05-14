@@ -515,6 +515,8 @@ function onPointerMove(e: PointerEvent) {
 
   if (mode === 'drag-frame') {
     store.updateFramePos(dragId, startRect.x + dx, startRect.y + dy)
+    const target = findDropTarget(canvas.x, canvas.y, dragId)
+    dropTarget.value = target?.frameId === dragId ? null : target
   }
 
   if (mode === 'drag-element') {
@@ -556,7 +558,10 @@ function onPointerUp(e?: PointerEvent) {
     return
   }
 
-  if (mode === 'drag-element' && dropTarget.value) {
+  if (mode === 'drag-frame' && dropTarget.value) {
+    store.moveFrameInto(dragId, dropTarget.value.parentId, dropTarget.value.index)
+    refreshGeometry()
+  } else if (mode === 'drag-element' && dropTarget.value) {
     store.moveNodeTo(dragId, dropTarget.value.parentId, dropTarget.value.index)
     store.select(dragId)
     refreshGeometry()

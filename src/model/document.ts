@@ -1,9 +1,9 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { Binding, BindingSource, BindingTarget, CapabilityInstance, DesignNode, FrameLayout, ComponentDef } from './types'
+import type { Binding, BindingSource, BindingTarget, CapabilityInstance, ComponentDef, DesignNode, FrameLayout } from './types'
 import { createCapabilityInstance } from './capabilities'
 import { createLibraryNode } from './library'
-import { nodeId, createNode, findNode, findParent, removeNode, insertChild } from './operations'
+import { nodeId, cloneNode, createNode, findNode, findParent, removeNode, insertChild } from './operations'
 import { isLibraryInstanceRoot } from './display'
 
 export const useDocumentStore = defineStore('document', () => {
@@ -176,8 +176,41 @@ export const useDocumentStore = defineStore('document', () => {
     return capabilities.value.filter((capability) => capability.targetNodeId === nodeIdVal)
   }
 
+  function uniqueComponentName(baseName: string): string {
+    let name = baseName
+    let suffix = 2
+    while (componentDefs.value.some((component) => component.name === name)) {
+      name = `${baseName}${suffix}`
+      suffix++
+    }
+    return name
+  }
+
+  function createComponentFromNode(nodeIdVal: string): ComponentDef | null {
+    const frame = findFrameContaining(nodeIdVal)
+    if (!frame) return null
+    const node = findNode(frame, nodeIdVal)
+    if (!node) return null
+
+    const baseName = node.meta.name ?? node.type
+    const name = uniqueComponentName(toPascalCase(baseName))
+    const component: ComponentDef = {
+      id: `cmp_${crypto.randomUUID().slice(0, 8)}`,
+      name,
+      tree: cloneNode(node),
+      props: [],
+      slots: [],
+    }
+    componentDefs.value.push(component)
+
+    node.meta.name = name
+    node.meta.source = { kind: 'library', library: 'local', component: name, part: 'root' }
+    return component
+  }
+
   function insertLibraryComponent(componentId: string): DesignNode | null {
-    const node = createLibraryNode(componentId)
+    const node = instantiateLibraryComponent(componentId)
+    if (!node) return null
     const target = libraryInsertTarget()
 
     insertChild(target, node)
@@ -186,7 +219,8 @@ export const useDocumentStore = defineStore('document', () => {
   }
 
   function insertLibraryComponentAt(componentId: string, x: number, y: number, targetNodeId?: string): DesignNode | null {
-    const node = createLibraryNode(componentId)
+    const node = instantiateLibraryComponent(componentId)
+    if (!node) return null
     const target = targetNodeId ? findNodeInDocument(targetNodeId) : null
 
     if (target && isContainerNode(target) && !isLibraryInstanceRoot(target)) {
@@ -205,6 +239,40 @@ export const useDocumentStore = defineStore('document', () => {
     insertChild(frame, node)
     select(node.id)
     return node
+  }
+
+  function instantiateLibraryComponent(componentId: string): DesignNode | null {
+    if (componentId.startsWith('local:')) {
+      const id = componentId.slice('local:'.length)
+      const component = componentDefs.value.find((candidate) => candidate.id === id)
+      if (!component) return null
+      const node = cloneNode(component.tree)
+      node.meta.name = component.name
+      node.meta.source = { kind: 'library', library: 'local', component: component.name, part: 'root' }
+      return node
+    }
+
+    return createLibraryNode(componentId)
+  }
+
+  function moveFrameInto(frameId: string, parentId: string, index: number): boolean {
+    const frameIndex = frames.value.findIndex((frame) => frame.id === frameId)
+    if (frameIndex === -1) return false
+    const [frame] = frames.value.splice(frameIndex, 1)
+    delete frameLayout.value[frameId]
+
+    for (const targetFrame of frames.value) {
+      const parent = findNode(targetFrame, parentId)
+      if (parent) {
+        insertChild(parent, frame, index)
+        select(frame.id)
+        return true
+      }
+    }
+
+    frames.value.splice(frameIndex, 0, frame)
+    frameLayout.value[frameId] = frameLayout.value[frameId] ?? { x: 0, y: 0, width: 200, height: 120 }
+    return false
   }
 
   function findNodeInDocument(id: string): DesignNode | null {
@@ -325,8 +393,10 @@ export const useDocumentStore = defineStore('document', () => {
     addCapability,
     removeCapability,
     capabilitiesForNode,
+    createComponentFromNode,
     insertLibraryComponent,
     insertLibraryComponentAt,
+    moveFrameInto,
     extractNodeToFrame,
     addBinding,
     removeBinding,
@@ -337,6 +407,12 @@ export const useDocumentStore = defineStore('document', () => {
 
 function isContainerNode(node: DesignNode): boolean {
   return !['input', 'img', 'br', 'hr'].includes(node.type)
+}
+
+function toPascalCase(value: string): string {
+  const cleaned = value.replace(/[^a-zA-Z0-9]+/g, ' ').trim()
+  const pascal = cleaned.replace(/(^|\s+)(\w)/g, (_, _space: string, letter: string) => letter.toUpperCase()).replace(/\s+/g, '')
+  return pascal || 'Component'
 }
 
 function sameTarget(left: BindingTarget, right: BindingTarget): boolean {
