@@ -1,9 +1,12 @@
 import { ref } from 'vue'
-import type { DesignNode, FrameLayout } from './types'
+import type { Binding, CapabilityInstance, ComponentDef, DesignNode, FrameLayout } from './types'
 
-interface Snapshot {
+export interface Snapshot {
   frames: DesignNode[]
   frameLayout: Record<string, FrameLayout>
+  componentDefs: ComponentDef[]
+  capabilities: CapabilityInstance[]
+  bindings: Binding[]
 }
 
 const undoStack = ref<Snapshot[]>([])
@@ -14,29 +17,23 @@ function clone<T>(val: T): T {
   return structuredClone(val)
 }
 
-export function pushSnapshot(frames: DesignNode[], frameLayout: Record<string, FrameLayout>): void {
-  undoStack.value.push(clone({ frames, frameLayout }))
+export function pushSnapshot(snapshot: Snapshot): void {
+  undoStack.value.push(clone(snapshot))
   if (undoStack.value.length > MAX_HISTORY) undoStack.value.shift()
   redoStack.value = []
 }
 
-export function undo(
-  currentFrames: DesignNode[],
-  currentLayout: Record<string, FrameLayout>,
-): Snapshot | null {
+export function undo(current: Snapshot): Snapshot | null {
   const snapshot = undoStack.value.pop()
   if (!snapshot) return null
-  redoStack.value.push(clone({ frames: currentFrames, frameLayout: currentLayout }))
+  redoStack.value.push(clone(current))
   return clone(snapshot)
 }
 
-export function redo(
-  currentFrames: DesignNode[],
-  currentLayout: Record<string, FrameLayout>,
-): Snapshot | null {
+export function redo(current: Snapshot): Snapshot | null {
   const snapshot = redoStack.value.pop()
   if (!snapshot) return null
-  undoStack.value.push(clone({ frames: currentFrames, frameLayout: currentLayout }))
+  undoStack.value.push(clone(current))
   return clone(snapshot)
 }
 

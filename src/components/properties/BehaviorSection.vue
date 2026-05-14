@@ -35,6 +35,7 @@ const addableGroups = computed(() => {
 function addCapability(definitionId: string) {
   const definition = getCapabilityDefinition(definitionId)
   if (!definition) return
+  store.recordHistory()
   store.addCapability(definitionId, definition.scope === 'element' ? props.node.id : undefined)
 }
 

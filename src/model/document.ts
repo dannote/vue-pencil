@@ -5,6 +5,7 @@ import { createCapabilityInstance } from './capabilities'
 import { createLibraryNode } from './library'
 import { nodeId, cloneNode, createNode, findNode, findParent, removeNode, insertChild } from './operations'
 import { isLibraryInstanceRoot } from './display'
+import { pushSnapshot, redo as redoSnapshot, undo as undoSnapshot, type Snapshot } from './history'
 
 export const useDocumentStore = defineStore('document', () => {
   const frames = ref<DesignNode[]>([])
@@ -27,6 +28,39 @@ export const useDocumentStore = defineStore('document', () => {
     }
     return result
   })
+
+  function snapshot(): Snapshot {
+    return {
+      frames: frames.value,
+      frameLayout: frameLayout.value,
+      componentDefs: componentDefs.value,
+      capabilities: capabilities.value,
+      bindings: bindings.value,
+    }
+  }
+
+  function restoreSnapshot(snapshotValue: Snapshot): void {
+    frames.value = snapshotValue.frames
+    frameLayout.value = snapshotValue.frameLayout
+    componentDefs.value = snapshotValue.componentDefs
+    capabilities.value = snapshotValue.capabilities
+    bindings.value = snapshotValue.bindings
+    deselect()
+  }
+
+  function recordHistory(): void {
+    pushSnapshot(snapshot())
+  }
+
+  function undo(): void {
+    const previous = undoSnapshot(snapshot())
+    if (previous) restoreSnapshot(previous)
+  }
+
+  function redo(): void {
+    const next = redoSnapshot(snapshot())
+    if (next) restoreSnapshot(next)
+  }
 
   function findFrameContaining(nodeId: string): DesignNode | null {
     for (const frame of frames.value) {
@@ -376,6 +410,9 @@ export const useDocumentStore = defineStore('document', () => {
     selectedIds,
     selectedNodes,
     hoveredId,
+    recordHistory,
+    undo,
+    redo,
     findFrameContaining,
     addFrame,
     removeFrame,

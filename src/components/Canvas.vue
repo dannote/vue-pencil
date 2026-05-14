@@ -391,6 +391,7 @@ function onPointerDown(e: PointerEvent) {
   // Resize handles
   const handleHit = hitTestHandle(canvas.x, canvas.y)
   if (handleHit) {
+    store.recordHistory()
     mode = 'resize'
     dragId = handleHit.id
     activeHandle = handleHit.handle
@@ -446,6 +447,7 @@ function onPointerDown(e: PointerEvent) {
   altClone = e.altKey
 
   if (hit.nodeId === hit.frameId) {
+    store.recordHistory()
     mode = 'drag-frame'
     const layout = store.frameLayout[hit.frameId]
     startRect = { x: layout.x, y: layout.y, w: layout.width, h: layout.height }
@@ -461,6 +463,7 @@ function onPointerDown(e: PointerEvent) {
       }
     }
   } else {
+    store.recordHistory()
     mode = 'pending-drag'
   }
 
@@ -661,6 +664,21 @@ function toggleAutoLayout() {
 }
 
 function onKeyDown(e: KeyboardEvent) {
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') {
+    e.preventDefault()
+    if (e.shiftKey) store.redo()
+    else store.undo()
+    refreshGeometry()
+    return
+  }
+
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'y') {
+    e.preventDefault()
+    store.redo()
+    refreshGeometry()
+    return
+  }
+
   if (store.editingTextId) {
     if (e.key === 'Escape') {
       store.commitTextEdit()
@@ -680,6 +698,7 @@ function onKeyDown(e: KeyboardEvent) {
   }
 
   if ((e.key === 'Delete' || e.key === 'Backspace') && store.selectedIds.size > 0) {
+    store.recordHistory()
     for (const id of store.selectedIds) {
       if (store.frameLayout[id]) {
         store.removeFrame(id)

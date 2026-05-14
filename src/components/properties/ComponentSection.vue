@@ -30,12 +30,16 @@ function bindProperty(property: ComponentPropertyContract, sourceId: string) {
   const binding = store.bindingForTarget(target)
 
   if (!sourceId) {
-    if (binding) store.removeBinding(binding.id)
+    if (binding) {
+      store.recordHistory()
+      store.removeBinding(binding.id)
+    }
     return
   }
 
   const value = values.value.find((candidate) => candidate.id === sourceId)
   if (!value) return
+  store.recordHistory()
   store.addBinding(target, value.source)
 }
 </script>

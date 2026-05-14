@@ -10,6 +10,7 @@ const props = defineProps<{
 const store = useDocumentStore()
 
 function createComponent() {
+  store.recordHistory()
   store.createComponentFromNode(props.node.id)
 }
 </script>
