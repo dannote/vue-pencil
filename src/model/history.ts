@@ -37,6 +37,11 @@ export function redo(current: Snapshot): Snapshot | null {
   return clone(snapshot)
 }
 
+export function clearHistory(): void {
+  undoStack.value = []
+  redoStack.value = []
+}
+
 export function canUndo(): boolean {
   return undoStack.value.length > 0
 }

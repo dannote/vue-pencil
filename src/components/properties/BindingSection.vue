@@ -54,49 +54,64 @@ const propBindingPreview = computed(() => `${propName.value}=\"${propBinding.val
 
 function bindText(sourceId: string) {
   if (!sourceId) {
-    if (textBinding.value) store.removeBinding(textBinding.value.id)
+    if (textBinding.value) {
+      store.recordHistory()
+      store.removeBinding(textBinding.value.id)
+    }
     return
   }
 
   const value = values.value.find((candidate) => candidate.id === sourceId)
   if (!value) return
+  store.recordHistory()
   store.addBinding(textTarget.value, value.source)
 }
 
 function bindStyle(sourceId: string) {
   if (!sourceId) {
-    if (styleBinding.value) store.removeBinding(styleBinding.value.id)
+    if (styleBinding.value) {
+      store.recordHistory()
+      store.removeBinding(styleBinding.value.id)
+    }
     return
   }
 
   const value = values.value.find((candidate) => candidate.id === sourceId)
   if (!value) return
+  store.recordHistory()
   store.addBinding(styleTarget.value, value.source)
 }
 
 function bindProp(sourceId: string) {
   if (!sourceId) {
-    if (propBinding.value) store.removeBinding(propBinding.value.id)
+    if (propBinding.value) {
+      store.recordHistory()
+      store.removeBinding(propBinding.value.id)
+    }
     return
   }
 
   const value = values.value.find((candidate) => candidate.id === sourceId)
   if (!value) return
+  store.recordHistory()
   store.addBinding(propTarget.value, value.source)
 }
 
 function updateTextTransform(expression: string) {
   if (!textBinding.value) return
+  store.recordHistory()
   textBinding.value.transform = expression ? { expression } : undefined
 }
 
 function updateStyleTransform(expression: string) {
   if (!styleBinding.value) return
+  store.recordHistory()
   styleBinding.value.transform = expression ? { expression } : undefined
 }
 
 function updatePropTransform(expression: string) {
   if (!propBinding.value) return
+  store.recordHistory()
   propBinding.value.transform = expression ? { expression } : undefined
 }
 </script>

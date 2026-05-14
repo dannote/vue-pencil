@@ -301,7 +301,7 @@ function createNodeFromTool(tool: string, x: number, y: number, w: number, h: nu
       })
       store.addChild(frame.id, 'p', {
         margin: '0',
-      }, ['Type something'])
+      }, ['Type something'], undefined, undefined, true)
       store.select(frame.id)
       break
     }
@@ -319,7 +319,7 @@ function createNodeFromTool(tool: string, x: number, y: number, w: number, h: nu
         fontSize: '14px',
         outline: 'none',
         boxSizing: 'border-box',
-      }, [], undefined, 'Text Input')
+      }, [], undefined, 'Text Input', true)
       if (input) {
         input.props.type = 'text'
         input.props.placeholder = 'Enter text...'
@@ -517,7 +517,7 @@ function onPointerMove(e: PointerEvent) {
   }
 
   if (mode === 'drag-frame') {
-    store.updateFramePos(dragId, startRect.x + dx, startRect.y + dy)
+    store.updateFramePos(dragId, startRect.x + dx, startRect.y + dy, true)
     const target = findDropTarget(canvas.x, canvas.y, dragId)
     dropTarget.value = target?.frameId === dragId ? null : target
   }
@@ -544,8 +544,8 @@ function onPointerMove(e: PointerEvent) {
       h = MIN_SIZE
     }
 
-    store.updateFramePos(dragId, x, y)
-    store.updateFrameSize(dragId, w, h)
+    store.updateFramePos(dragId, x, y, true)
+    store.updateFrameSize(dragId, w, h, true)
   }
 }
 
@@ -701,7 +701,7 @@ function onKeyDown(e: KeyboardEvent) {
     store.recordHistory()
     for (const id of store.selectedIds) {
       if (store.frameLayout[id]) {
-        store.removeFrame(id)
+        store.removeFrame(id, true)
       } else {
         for (const frame of store.frames) {
           removeNode(frame, id)

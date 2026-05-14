@@ -5,7 +5,7 @@ import { createCapabilityInstance } from './capabilities'
 import { createLibraryNode } from './library'
 import { nodeId, cloneNode, createNode, findNode, findParent, removeNode, insertChild } from './operations'
 import { isLibraryInstanceRoot } from './display'
-import { pushSnapshot, redo as redoSnapshot, undo as undoSnapshot, type Snapshot } from './history'
+import { clearHistory as clearHistoryStack, pushSnapshot, redo as redoSnapshot, undo as undoSnapshot, type Snapshot } from './history'
 
 export const useDocumentStore = defineStore('document', () => {
   const frames = ref<DesignNode[]>([])
@@ -62,6 +62,10 @@ export const useDocumentStore = defineStore('document', () => {
     if (next) restoreSnapshot(next)
   }
 
+  function clearHistory(): void {
+    clearHistoryStack()
+  }
+
   function findFrameContaining(nodeId: string): DesignNode | null {
     for (const frame of frames.value) {
       if (findNode(frame, nodeId)) return frame
@@ -69,14 +73,16 @@ export const useDocumentStore = defineStore('document', () => {
     return null
   }
 
-  function addFrame(x: number, y: number, width: number, height: number, style: Record<string, string> = {}): DesignNode {
+  function addFrame(x: number, y: number, width: number, height: number, style: Record<string, string> = {}, skipHistory = false): DesignNode {
+    if (!skipHistory) recordHistory()
     const node = createNode('div', { position: 'relative', ...style }, [], 'Frame')
     frames.value.push(node)
     frameLayout.value[node.id] = { x, y, width, height }
     return node
   }
 
-  function removeFrame(frameId: string): void {
+  function removeFrame(frameId: string, skipHistory = false): void {
+    if (!skipHistory) recordHistory()
     const idx = frames.value.findIndex((f) => f.id === frameId)
     if (idx === -1) return
     frames.value.splice(idx, 1)
@@ -90,7 +96,9 @@ export const useDocumentStore = defineStore('document', () => {
     children: (DesignNode | string)[] = [],
     index?: number,
     name?: string,
+    skipHistory = false,
   ): DesignNode | null {
+    if (!skipHistory) recordHistory()
     for (const frame of frames.value) {
       const parent = findNode(frame, parentId)
       if (!parent) continue
@@ -132,7 +140,7 @@ export const useDocumentStore = defineStore('document', () => {
         insertChild(parent, removed, index)
         // Remove source frame if empty
         if (sourceFrame && sourceFrame.children.length === 0) {
-          removeFrame(sourceFrame.id)
+          removeFrame(sourceFrame.id, true)
         }
         return true
       }
@@ -151,7 +159,8 @@ export const useDocumentStore = defineStore('document', () => {
     selectedIds.value = new Set()
   }
 
-  function updateNodeStyle(id: string, updates: Record<string, string>): void {
+  function updateNodeStyle(id: string, updates: Record<string, string>, skipHistory = false): void {
+    if (!skipHistory) recordHistory()
     for (const frame of frames.value) {
       const node = findNode(frame, id)
       if (node) {
@@ -161,7 +170,8 @@ export const useDocumentStore = defineStore('document', () => {
     }
   }
 
-  function updateFramePos(frameId: string, x: number, y: number): void {
+  function updateFramePos(frameId: string, x: number, y: number, skipHistory = false): void {
+    if (!skipHistory) recordHistory()
     const layout = frameLayout.value[frameId]
     if (layout) {
       layout.x = x
@@ -169,7 +179,8 @@ export const useDocumentStore = defineStore('document', () => {
     }
   }
 
-  function updateFrameSize(frameId: string, width: number, height: number): void {
+  function updateFrameSize(frameId: string, width: number, height: number, skipHistory = false): void {
+    if (!skipHistory) recordHistory()
     const layout = frameLayout.value[frameId]
     if (layout) {
       layout.width = width
@@ -177,7 +188,8 @@ export const useDocumentStore = defineStore('document', () => {
     }
   }
 
-  function updateNodeText(id: string, children: (DesignNode | string)[]): void {
+  function updateNodeText(id: string, children: (DesignNode | string)[], skipHistory = false): void {
+    if (!skipHistory) recordHistory()
     for (const frame of frames.value) {
       const node = findNode(frame, id)
       if (node) {
@@ -243,6 +255,7 @@ export const useDocumentStore = defineStore('document', () => {
   }
 
   function insertLibraryComponent(componentId: string): DesignNode | null {
+    recordHistory()
     const node = instantiateLibraryComponent(componentId)
     if (!node) return null
     const target = libraryInsertTarget()
@@ -253,6 +266,7 @@ export const useDocumentStore = defineStore('document', () => {
   }
 
   function insertLibraryComponentAt(componentId: string, x: number, y: number, targetNodeId?: string): DesignNode | null {
+    recordHistory()
     const node = instantiateLibraryComponent(componentId)
     if (!node) return null
     const target = targetNodeId ? findNodeInDocument(targetNodeId) : null
@@ -269,7 +283,7 @@ export const useDocumentStore = defineStore('document', () => {
       justifyContent: 'center',
       background: 'white',
       borderRadius: '12px',
-    })
+    }, true)
     insertChild(frame, node)
     select(node.id)
     return node
@@ -339,7 +353,7 @@ export const useDocumentStore = defineStore('document', () => {
       justifyContent: 'center',
       background: 'white',
       borderRadius: '12px',
-    })
+    }, true)
   }
 
   function extractNodeToFrame(nodeIdVal: string, x: number, y: number): DesignNode | null {
@@ -364,10 +378,10 @@ export const useDocumentStore = defineStore('document', () => {
       justifyContent: 'center',
       background: 'white',
       borderRadius: '12px',
-    })
+    }, true)
     insertChild(frame, extracted)
 
-    if (sourceFrame && sourceFrame.children.length === 0) removeFrame(sourceFrame.id)
+    if (sourceFrame && sourceFrame.children.length === 0) removeFrame(sourceFrame.id, true)
     select(extracted.id)
     return frame
   }
@@ -413,6 +427,7 @@ export const useDocumentStore = defineStore('document', () => {
     recordHistory,
     undo,
     redo,
+    clearHistory,
     findFrameContaining,
     addFrame,
     removeFrame,

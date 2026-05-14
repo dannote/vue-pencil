@@ -304,6 +304,8 @@ onMounted(() => {
       { kind: 'capability-output', capabilityId: size.id, outputId: size.outputs[0].id },
     )
   }
+
+  store.clearHistory()
 })
 </script>
 

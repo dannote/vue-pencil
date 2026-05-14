@@ -77,7 +77,7 @@ function outputLabel(label: string): string {
             </div>
             <button
               class="rounded px-1.5 py-0.5 text-[10px] text-[#f38ba8] transition-colors hover:bg-[#313244] hover:text-[#eba0ac]"
-              @click="store.removeCapability(capability.id)"
+              @click="store.recordHistory(); store.removeCapability(capability.id)"
             >
               Remove
             </button>
