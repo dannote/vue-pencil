@@ -232,6 +232,56 @@ export const useDocumentStore = defineStore('document', () => {
     return name
   }
 
+  function duplicateSelection(): void {
+    if (selectedIds.value.size === 0) return
+    recordHistory()
+
+    const duplicatedIds: string[] = []
+    for (const id of [...selectedIds.value]) {
+      const frame = frames.value.find((candidate) => candidate.id === id)
+      if (frame) {
+        const clone = cloneNode(frame)
+        const layout = frameLayout.value[id]
+        frames.value.push(clone)
+        frameLayout.value[clone.id] = {
+          x: (layout?.x ?? 0) + 24,
+          y: (layout?.y ?? 0) + 24,
+          width: layout?.width ?? 160,
+          height: layout?.height ?? 100,
+        }
+        duplicatedIds.push(clone.id)
+        continue
+      }
+
+      for (const root of frames.value) {
+        const parentInfo = findParent(root, id)
+        if (!parentInfo) continue
+        const sourceIndex = parentInfo.parent.children.findIndex((child) => typeof child !== 'string' && child.id === id)
+        const source = parentInfo.parent.children[sourceIndex]
+        if (typeof source === 'string') continue
+        const clone = cloneNode(source)
+        parentInfo.parent.children.splice(sourceIndex + 1, 0, clone)
+        duplicatedIds.push(clone.id)
+        break
+      }
+    }
+
+    selectedIds.value = new Set(duplicatedIds)
+  }
+
+  function deleteSelection(): void {
+    if (selectedIds.value.size === 0) return
+    recordHistory()
+    for (const id of [...selectedIds.value]) {
+      if (frameLayout.value[id]) {
+        removeFrame(id, true)
+      } else {
+        for (const frame of frames.value) removeNode(frame, id)
+      }
+    }
+    deselect()
+  }
+
   function createComponentFromNode(nodeIdVal: string): ComponentDef | null {
     const frame = findFrameContaining(nodeIdVal)
     if (!frame) return null
@@ -445,6 +495,8 @@ export const useDocumentStore = defineStore('document', () => {
     addCapability,
     removeCapability,
     capabilitiesForNode,
+    duplicateSelection,
+    deleteSelection,
     createComponentFromNode,
     insertLibraryComponent,
     insertLibraryComponentAt,

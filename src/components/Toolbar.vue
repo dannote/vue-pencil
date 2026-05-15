@@ -1,6 +1,14 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted } from 'vue'
+import {
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuPortal,
+  DropdownMenuRoot,
+  DropdownMenuTrigger,
+} from 'reka-ui'
 
+import IconChevronDown from '~icons/lucide/chevron-down'
 import IconCircle from '~icons/lucide/circle'
 import IconFrame from '~icons/lucide/frame'
 import IconMousePointer2 from '~icons/lucide/mouse-pointer-2'
@@ -25,16 +33,21 @@ const tools = [
   { key: 'V', name: 'select', label: 'Move', icon: IconMousePointer2 },
   { key: 'F', name: 'frame', label: 'Frame', icon: IconFrame },
   { key: 'R', name: 'rectangle', label: 'Rectangle', icon: IconSquare },
-  { key: 'T', name: 'text', label: 'Text', icon: IconType },
   { key: 'O', name: 'ellipse', label: 'Ellipse', icon: IconCircle },
+  { key: 'T', name: 'text', label: 'Text', icon: IconType },
   { key: 'I', name: 'input', label: 'Input', icon: IconTextCursorInput },
 ] as const
+
+const shapeTools = tools.filter(tool => tool.name === 'rectangle' || tool.name === 'ellipse')
+const primaryTools = tools.filter(tool => tool.name === 'select' || tool.name === 'frame' || tool.name === 'text' || tool.name === 'input')
 
 const TOOL_BY_KEY: Record<string, string> = Object.fromEntries(
   tools.map(t => [t.key, t.name])
 )
 
 const activeLabel = computed(() => tools.find(tool => tool.name === props.activeTool)?.label ?? 'Move')
+const activeShapeTool = computed(() => shapeTools.find(tool => tool.name === props.activeTool) ?? shapeTools[0])
+const shapeActive = computed(() => shapeTools.some(tool => tool.name === props.activeTool))
 
 function onKeyDown(e: KeyboardEvent) {
   if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) return
@@ -46,6 +59,10 @@ function onKeyDown(e: KeyboardEvent) {
     e.preventDefault()
     emit('tool', tool)
   }
+}
+
+function selectTool(name: string) {
+  emit('tool', name)
 }
 
 onMounted(() => window.addEventListener('keydown', onKeyDown))
@@ -80,7 +97,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeyDown))
   <div v-if="!preview" class="fixed bottom-4 left-1/2 z-50 -translate-x-1/2">
     <div class="flex items-center gap-0.5 rounded-xl border border-[#45475a] bg-[#1e1e2e]/95 p-1 shadow-2xl shadow-black/30 backdrop-blur">
       <button
-        v-for="t in tools"
+        v-for="t in primaryTools.slice(0, 2)"
         :key="t.name"
         class="group relative flex size-8 cursor-pointer items-center justify-center rounded-lg border-none transition-colors"
         :class="activeTool === t.name
@@ -88,12 +105,77 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeyDown))
           : 'bg-transparent text-[#a6adc8] hover:bg-[#313244] hover:text-[#f5f5f5]'"
         :aria-label="t.label"
         :title="`${t.label} (${t.key})`"
-        @click="emit('tool', t.name)"
+        @click="selectTool(t.name)"
       >
         <component :is="t.icon" class="size-4" />
-        <span
-          class="pointer-events-none absolute -top-9 left-1/2 hidden -translate-x-1/2 whitespace-nowrap rounded-md border border-[#45475a] bg-[#181825] px-2 py-1 text-[11px] font-medium text-[#cdd6f4] shadow-lg group-hover:block"
+        <span class="pointer-events-none absolute -top-9 left-1/2 hidden -translate-x-1/2 whitespace-nowrap rounded-md border border-[#45475a] bg-[#181825] px-2 py-1 text-[11px] font-medium text-[#cdd6f4] shadow-lg group-hover:block">
+          {{ t.label }} <span class="text-[#6c7086]">{{ t.key }}</span>
+        </span>
+      </button>
+
+      <div class="flex items-center">
+        <button
+          class="group relative flex size-8 cursor-pointer items-center justify-center rounded-lg border-none transition-colors"
+          :class="shapeActive
+            ? 'bg-[#4361ee] text-white'
+            : 'bg-transparent text-[#a6adc8] hover:bg-[#313244] hover:text-[#f5f5f5]'"
+          :title="`${activeShapeTool.label} (${activeShapeTool.key})`"
+          @click="selectTool(activeShapeTool.name)"
         >
+          <component :is="activeShapeTool.icon" class="size-4" />
+          <span class="pointer-events-none absolute -top-9 left-1/2 hidden -translate-x-1/2 whitespace-nowrap rounded-md border border-[#45475a] bg-[#181825] px-2 py-1 text-[11px] font-medium text-[#cdd6f4] shadow-lg group-hover:block">
+            Shape <span class="text-[#6c7086]">R/O</span>
+          </span>
+        </button>
+
+        <DropdownMenuRoot>
+          <DropdownMenuTrigger as-child>
+            <button
+              class="flex h-8 w-3 cursor-pointer items-center justify-center rounded-lg border-none transition-colors"
+              :class="shapeActive
+                ? 'bg-[#4361ee] text-white'
+                : 'bg-transparent text-[#a6adc8] hover:bg-[#313244] hover:text-[#f5f5f5]'"
+              aria-label="Shape tools"
+            >
+              <IconChevronDown class="size-2.5" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuPortal>
+            <DropdownMenuContent
+              side="top"
+              :side-offset="8"
+              align="start"
+              class="z-[60] min-w-36 rounded-xl border border-[#45475a] bg-[#1e1e2e] p-1 text-[#cdd6f4] shadow-2xl shadow-black/30"
+            >
+              <DropdownMenuItem
+                v-for="tool in shapeTools"
+                :key="tool.name"
+                class="flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium outline-none hover:bg-[#313244] data-[highlighted]:bg-[#313244]"
+                :class="activeTool === tool.name ? 'bg-[#4361ee] text-white' : ''"
+                @select="selectTool(tool.name)"
+              >
+                <component :is="tool.icon" class="size-3.5" />
+                <span class="flex-1">{{ tool.label }}</span>
+                <span class="text-[11px] text-[#6c7086]">{{ tool.key }}</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenuPortal>
+        </DropdownMenuRoot>
+      </div>
+
+      <button
+        v-for="t in primaryTools.slice(2)"
+        :key="t.name"
+        class="group relative flex size-8 cursor-pointer items-center justify-center rounded-lg border-none transition-colors"
+        :class="activeTool === t.name
+          ? 'bg-[#4361ee] text-white'
+          : 'bg-transparent text-[#a6adc8] hover:bg-[#313244] hover:text-[#f5f5f5]'"
+        :aria-label="t.label"
+        :title="`${t.label} (${t.key})`"
+        @click="selectTool(t.name)"
+      >
+        <component :is="t.icon" class="size-4" />
+        <span class="pointer-events-none absolute -top-9 left-1/2 hidden -translate-x-1/2 whitespace-nowrap rounded-md border border-[#45475a] bg-[#181825] px-2 py-1 text-[11px] font-medium text-[#cdd6f4] shadow-lg group-hover:block">
           {{ t.label }} <span class="text-[#6c7086]">{{ t.key }}</span>
         </span>
       </button>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, reactive, onMounted, onBeforeUnmount, inject, nextTick, type Ref } from 'vue'
 import { useDocumentStore } from '@/model/document'
-import { findNode, findParent, removeNode, insertChild, cloneNode } from '@/model/operations'
+import { findNode, findParent, insertChild, cloneNode } from '@/model/operations'
 import { ISLAND_BLEED } from '@/renderer/island-renderer'
 import Island from './Island.vue'
 import SelectionOverlay from './SelectionOverlay.vue'
@@ -56,6 +56,15 @@ function refreshGeometry() {
     })
   })
 }
+
+const actionBarRect = computed(() => {
+  const rect = selectionRects.value[0]
+  if (!rect || store.editingTextId) return null
+  return {
+    x: rect.x + rect.width / 2,
+    y: Math.max(rect.y - 44 / zoom.value, 8),
+  }
+})
 
 const selectionRects = computed(() => {
   void geometryVersion.value
@@ -625,6 +634,24 @@ function setIslandRef(frameId: string, comp: InstanceType<typeof Island> | null)
   }
 }
 
+function createComponentFromSelection() {
+  const id = [...store.selectedIds][0]
+  if (!id) return
+  store.recordHistory()
+  store.createComponentFromNode(id)
+  refreshGeometry()
+}
+
+function duplicateSelection() {
+  store.duplicateSelection()
+  refreshGeometry()
+}
+
+function deleteSelection() {
+  store.deleteSelection()
+  refreshGeometry()
+}
+
 function toggleAutoLayout() {
   if (store.selectedIds.size !== 1) return
   const id = [...store.selectedIds][0]
@@ -699,16 +726,7 @@ function onKeyDown(e: KeyboardEvent) {
 
   if ((e.key === 'Delete' || e.key === 'Backspace') && store.selectedIds.size > 0) {
     store.recordHistory()
-    for (const id of store.selectedIds) {
-      if (store.frameLayout[id]) {
-        store.removeFrame(id, true)
-      } else {
-        for (const frame of store.frames) {
-          removeNode(frame, id)
-        }
-      }
-    }
-    store.deselect()
+    store.deleteSelection()
     refreshGeometry()
   }
 }
@@ -748,6 +766,22 @@ onBeforeUnmount(() => {
       @commit-text="onCommitText"
     />
     <SelectionOverlay v-if="!preview" :rects="selectionRects" :zoom="zoom" :editing-id="store.editingTextId" />
+    <div
+      v-if="!preview && actionBarRect"
+      class="absolute z-20 flex items-center gap-1 rounded-xl border border-[#45475a] bg-[#1e1e2e]/95 p-1 shadow-2xl shadow-black/30 backdrop-blur"
+      :style="{
+        left: `${actionBarRect.x}px`,
+        top: `${actionBarRect.y}px`,
+        transform: `translateX(-50%) scale(${1 / zoom})`,
+        transformOrigin: 'top center',
+      }"
+      @pointerdown.stop
+    >
+      <button class="rounded-lg px-2.5 py-1.5 text-[11px] font-semibold text-[#cdd6f4] hover:bg-[#313244]" @click="toggleAutoLayout">Auto layout</button>
+      <button class="rounded-lg px-2.5 py-1.5 text-[11px] font-semibold text-[#cdd6f4] hover:bg-[#313244]" @click="createComponentFromSelection">Component</button>
+      <button class="rounded-lg px-2.5 py-1.5 text-[11px] font-semibold text-[#cdd6f4] hover:bg-[#313244]" @click="duplicateSelection">Duplicate</button>
+      <button class="rounded-lg px-2.5 py-1.5 text-[11px] font-semibold text-[#f38ba8] hover:bg-[#313244]" @click="deleteSelection">Delete</button>
+    </div>
     <InsertionIndicator :line="insertionLine" :zoom="zoom" />
 
     <!-- Draw preview rectangle -->
