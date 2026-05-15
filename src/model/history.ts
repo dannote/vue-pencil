@@ -14,7 +14,7 @@ const redoStack = ref<Snapshot[]>([])
 const MAX_HISTORY = 100
 
 function clone<T>(val: T): T {
-  return structuredClone(val)
+  return JSON.parse(JSON.stringify(val)) as T
 }
 
 export function pushSnapshot(snapshot: Snapshot): void {
