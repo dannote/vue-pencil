@@ -22,6 +22,8 @@ const store = useDocumentStore()
 
 const node = computed<DesignNode | null>(() => store.selectedNodes[0] ?? null)
 
+const isSlot = computed(() => Boolean(node.value?.meta.slot))
+
 const isFrame = computed(() => {
   if (!node.value) return false
   return store.frames.some((f) => f.id === node.value!.id)
@@ -65,11 +67,11 @@ function onFrameChange(prop: keyof FrameLayout, value: number) {
         <span v-if="nodeDisplayDetail(node)" class="text-[10px] text-[#6c7086]">{{ nodeDisplayDetail(node) }}</span>
       </div>
 
-      <ComponentSection :node="node" />
+      <ComponentSection v-if="!isSlot" :node="node" />
       <SlotSection :node="node" />
       <ComponentToolsSection :node="node" />
-      <BehaviorSection :node="node" />
-      <BindingSection :node="node" />
+      <BehaviorSection v-if="!isSlot" :node="node" />
+      <BindingSection v-if="!isSlot" :node="node" />
       <CodeSection :node="node" />
       <PositionSection
         :node="node"

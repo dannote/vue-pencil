@@ -66,7 +66,8 @@ function refreshGeometry() {
 
 const actionBarRect = computed(() => {
   const rect = selectionRects.value[0]
-  if (!rect || store.editingTextId) return null
+  const selected = store.selectedNodes[0]
+  if (!rect || store.editingTextId || selected?.meta.slot) return null
   return {
     x: rect.x + rect.width / 2,
     y: Math.max(rect.y - 44 / zoom.value, 8),

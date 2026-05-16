@@ -110,10 +110,11 @@ input:focus{border-color:#4361ee !important}
 .vp-checkbox-root[data-state="unchecked"] .vp-checkbox-indicator{display:none}
 .vp-progress-root .vp-progress-indicator{transform:translateX(-52%)}
 .vp-tabs-trigger[data-state="active"]{background:#4361ee!important;color:white!important}
-.vp-slot{position:relative}
-.vp-slot:empty,.vp-slot{outline-color:rgba(244,114,182,.55)!important}
-.vp-slot:hover{outline:1px solid rgba(244,114,182,.9)!important;outline-offset:-1px}
-.vp-slot[data-slot-name]::before{content:attr(data-slot-name) ' slot';position:absolute;top:-8px;left:10px;padding:1px 5px;border-radius:999px;background:#f472b6;color:white;font:600 9px -apple-system,BlinkMacSystemFont,sans-serif;text-transform:uppercase;letter-spacing:.03em;pointer-events:none;opacity:.85}
+.vp-slot{position:relative;color:#9ca3af;font-size:12px}
+.vp-slot:empty,.vp-slot{outline-color:rgba(244,114,182,.28)!important}
+.vp-slot:hover{outline:1px solid rgba(244,114,182,.75)!important;outline-offset:-1px}
+.vp-slot[data-slot-name]::before{content:attr(data-slot-name) ' slot';position:absolute;top:-8px;left:10px;padding:1px 5px;border-radius:999px;background:#f472b6;color:white;font:600 9px -apple-system,BlinkMacSystemFont,sans-serif;text-transform:uppercase;letter-spacing:.03em;pointer-events:none;opacity:0;transition:opacity .12s}
+.vp-slot:hover::before{opacity:.85}
 [contenteditable]{user-select:text;-webkit-user-select:text}
 </style></head><body><div id="root"></div></body></html>`,
   )

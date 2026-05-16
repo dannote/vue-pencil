@@ -355,8 +355,14 @@ export const useDocumentStore = defineStore('document', () => {
     recordHistory()
     const node = instantiateLibraryComponent(componentId)
     if (!node) return null
-    const target = libraryInsertTarget()
 
+    if (shouldInsertInFreshFrame(componentId)) {
+      const frame = addFrameForLibraryNode(node)
+      select(node.id)
+      return frame
+    }
+
+    const target = libraryInsertTarget()
     insertChild(target, node)
     select(node.id)
     return node
@@ -453,6 +459,21 @@ export const useDocumentStore = defineStore('document', () => {
     }
 
     return frames.value[0] ?? addDefaultLibraryFrame()
+  }
+
+  function shouldInsertInFreshFrame(componentId: string): boolean {
+    return componentId.startsWith('layout.') || componentId === 'reka.tabs' || componentId === 'reka.accordion' || componentId === 'reka.collapsible'
+  }
+
+  function addFrameForLibraryNode(node: DesignNode): DesignNode {
+    const frame = addFrame(120 + frames.value.length * 24, 100 + frames.value.length * 24, 360, 240, {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: 'transparent',
+    }, true)
+    insertChild(frame, node)
+    return frame
   }
 
   function addDefaultLibraryFrame(): DesignNode {
