@@ -1,6 +1,7 @@
 import type { Binding, CapabilityInstance, DesignNode } from './types'
 import { bindingExpression } from './bindings'
 import { getCapabilityDefinition } from './capabilities'
+import { isSlotNode } from './slots'
 
 const STYLE_TO_CSS: Record<string, string> = {
   backgroundColor: 'background-color',
@@ -64,7 +65,9 @@ export function nodeToVueTemplate(
 ): string {
   if (typeof node === 'string') return indent(escapeHtml(node), depth)
 
-  const tag = node.type
+  if (isSlotNode(node)) return slotToVueTemplate(node, depth, capabilities, bindings)
+
+  const tag = serializedTag(node)
   const attrs: string[] = []
   const textBinding = bindings.find((binding) => binding.target.kind === 'text' && binding.target.nodeId === node.id)
   const propBindings = bindings.filter((binding): binding is Binding & { target: { kind: 'prop'; nodeId: string; prop: string } } => (
@@ -160,6 +163,31 @@ export function nodeToVueTemplate(
   const childLines = node.children.map((c) => nodeToVueTemplate(c, depth + 1, capabilities, bindings)).join('\n')
 
   return indent(`<${tag}${attrStr}>`, depth) + '\n' + childLines + '\n' + indent(`</${tag}>`, depth)
+}
+
+function slotToVueTemplate(
+  node: DesignNode,
+  depth: number,
+  capabilities: CapabilityInstance[],
+  bindings: Binding[],
+): string {
+  const name = node.meta.slot?.name ?? 'default'
+  const slotName = name === 'default' ? 'default' : name
+  const childLines = node.children
+    .map((child) => nodeToVueTemplate(child, depth + 1, capabilities, bindings))
+    .filter((line) => line.trim().length > 0)
+    .join('\n')
+
+  if (!childLines) return indent(`<template #${slotName}></template>`, depth)
+  return indent(`<template #${slotName}>`, depth) + '\n' + childLines + '\n' + indent('</template>', depth)
+}
+
+function serializedTag(node: DesignNode): string {
+  if (node.meta.source?.kind === 'library' && node.meta.source.library === 'vue-pencil' && node.meta.source.part === 'root') {
+    return node.meta.source.component
+  }
+
+  return node.type
 }
 
 function capabilityScript(capabilities: CapabilityInstance[], componentImports: Set<string> = new Set()): string {

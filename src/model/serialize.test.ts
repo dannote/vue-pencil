@@ -130,6 +130,30 @@ describe('serialize', () => {
     expect(sfc).toContain('<SwitchThumb style="color: red"></SwitchThumb>')
   })
 
+  it('serializes slot containers as Vue slot templates', () => {
+    const root = node({
+      type: 'div',
+      props: { style: {} },
+      children: [
+        node({
+          id: 'header',
+          props: { style: {} },
+          children: ['Title'],
+          meta: { name: 'Header slot', slot: { name: 'header', label: 'Header' } },
+        }),
+        node({
+          id: 'body',
+          props: { style: {} },
+          children: ['Body'],
+          meta: { name: 'Body slot', slot: { name: 'default', label: 'Body' } },
+        }),
+      ],
+      meta: { name: 'Card', source: { kind: 'library', library: 'vue-pencil', component: 'Card', part: 'root' } },
+    })
+
+    expect(nodeToVueTemplate(root)).toBe(`<Card>\n  <template #header>\n    Title\n  </template>\n  <template #default>\n    Body\n  </template>\n</Card>`)
+  })
+
   it('emits v-model prop bindings without adding a colon', () => {
     const capability = createCapabilityInstance('theme.dark-mode')
     const binding: Binding = {
