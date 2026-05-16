@@ -57,7 +57,7 @@ function toggleExpanded() {
   <div>
     <div
       class="group flex items-center gap-1 rounded-md py-1 pr-2 text-xs transition-colors"
-      :class="selected ? 'bg-[#4361ee] text-white' : 'text-[#a6adc8] hover:bg-[#313244] hover:text-[#cdd6f4]'"
+      :class="selected ? 'bg-[var(--vp-accent)] text-white' : 'text-[var(--vp-text-secondary)] hover:bg-[var(--vp-bg-hover)] hover:text-[var(--vp-text-primary)]'"
       :style="{ paddingLeft: indent }"
     >
       <button
@@ -68,10 +68,10 @@ function toggleExpanded() {
         <IconChevronRight class="size-3 transition-transform" :class="expanded ? 'rotate-90' : ''" />
       </button>
       <button class="flex min-w-0 flex-1 items-center gap-2 text-left" @click="selectNode">
-        <component :is="icon" class="size-3.5 shrink-0" :class="selected ? 'text-white' : 'text-[#89b4fa]'" />
+        <component :is="icon" class="size-3.5 shrink-0" :class="selected ? 'text-white' : 'text-[var(--vp-accent-hover)]'" />
         <span class="min-w-0 flex-1 truncate font-medium">{{ displayName }}</span>
         <span
-          class="hidden shrink-0 rounded bg-[#313244] px-1.5 py-0.5 text-[9px] font-semibold text-[#a6adc8] group-hover:inline"
+          class="hidden shrink-0 rounded bg-[var(--vp-bg-hover)] px-1.5 py-0.5 text-[9px] font-semibold text-[var(--vp-text-secondary)] group-hover:inline"
           :class="selected ? '!bg-white/15 !text-white/80' : ''"
         >
           {{ displayKind }}

@@ -77,18 +77,18 @@ function onLibraryDragStart(event: DragEvent, componentId: string) {
 </script>
 
 <template>
-  <div class="fixed top-10 left-0 bottom-0 z-40 w-60 overflow-y-auto border-r border-[#313244] bg-[#1e1e2e]">
+  <div class="fixed top-10 left-0 bottom-0 z-40 w-60 overflow-y-auto border-r border-[var(--vp-bg-hover)] bg-[var(--vp-bg-panel)]">
     <div class="grid grid-cols-2 gap-1 p-2">
       <button
         class="rounded-md px-2 py-1.5 text-xs font-medium transition-colors"
-        :class="tab === 'layers' ? 'bg-[#45475a] text-[#cdd6f4]' : 'text-[#a6adc8] hover:bg-[#313244]'"
+        :class="tab === 'layers' ? 'bg-[var(--vp-border-strong)] text-[var(--vp-text-primary)]' : 'text-[var(--vp-text-secondary)] hover:bg-[var(--vp-bg-hover)]'"
         @click="tab = 'layers'"
       >
         Layers
       </button>
       <button
         class="rounded-md px-2 py-1.5 text-xs font-medium transition-colors"
-        :class="tab === 'library' ? 'bg-[#45475a] text-[#cdd6f4]' : 'text-[#a6adc8] hover:bg-[#313244]'"
+        :class="tab === 'library' ? 'bg-[var(--vp-border-strong)] text-[var(--vp-text-primary)]' : 'text-[var(--vp-text-secondary)] hover:bg-[var(--vp-bg-hover)]'"
         @click="tab = 'library'"
       >
         Library
@@ -96,9 +96,9 @@ function onLibraryDragStart(event: DragEvent, componentId: string) {
     </div>
 
     <template v-if="tab === 'layers'">
-      <div class="flex items-center justify-between px-4 pt-2 pb-2 text-[11px] font-semibold uppercase tracking-widest text-[#a6adc8]">
+      <div class="flex items-center justify-between px-4 pt-2 pb-2 text-[11px] font-semibold uppercase tracking-widest text-[var(--vp-text-secondary)]">
         <span>Layers</span>
-        <span class="rounded bg-[#313244] px-1.5 py-0.5 text-[9px] tracking-normal text-[#6c7086]">{{ frames.length }}</span>
+        <span class="rounded bg-[var(--vp-bg-hover)] px-1.5 py-0.5 text-[9px] tracking-normal text-[var(--vp-text-tertiary)]">{{ frames.length }}</span>
       </div>
       <div class="space-y-0.5 px-2 pb-4">
         <LayerTreeItem v-for="frame in frames" :key="frame.id" :node="frame" />
@@ -106,33 +106,33 @@ function onLibraryDragStart(event: DragEvent, componentId: string) {
     </template>
 
     <template v-else>
-      <div class="flex items-center gap-2 px-4 pt-2 pb-2 text-[11px] font-semibold uppercase tracking-widest text-[#a6adc8]">
+      <div class="flex items-center gap-2 px-4 pt-2 pb-2 text-[11px] font-semibold uppercase tracking-widest text-[var(--vp-text-secondary)]">
         <IconLibrary class="size-3.5" />
         <span>Assets</span>
       </div>
       <div class="space-y-4 px-3 pb-4">
         <div v-for="group in libraryGroups" :key="group.name" class="space-y-1.5">
-          <div class="px-1 text-[10px] font-semibold uppercase tracking-wide text-[#6c7086]">
+          <div class="px-1 text-[10px] font-semibold uppercase tracking-wide text-[var(--vp-text-tertiary)]">
             {{ group.name }}
           </div>
           <button
             v-for="component in group.components"
             :key="component.id"
-            class="group flex w-full items-center gap-2 rounded-lg border border-transparent bg-transparent px-2 py-2 text-left transition-colors hover:border-[#45475a] hover:bg-[#313244]"
+            class="group flex w-full items-center gap-2 rounded-lg border border-transparent bg-transparent px-2 py-2 text-left transition-colors hover:border-[var(--vp-border-strong)] hover:bg-[var(--vp-bg-hover)]"
             :title="component.description"
             draggable="true"
             @dragstart="onLibraryDragStart($event, component.id)"
             @click="store.insertLibraryComponent(component.id)"
           >
-            <span class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-[#181825] text-[#89b4fa] ring-1 ring-[#45475a] transition-colors group-hover:ring-[#89b4fa]">
+            <span class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-[var(--vp-bg-panel-raised)] text-[var(--vp-accent-hover)] ring-1 ring-[var(--vp-border-strong)] transition-colors group-hover:ring-[var(--vp-accent-hover)]">
               <component :is="component.icon" class="size-4" />
             </span>
             <span class="min-w-0 flex-1">
-              <span class="block truncate text-xs font-semibold text-[#cdd6f4]">{{ component.name }}</span>
-              <span class="mt-0.5 block truncate text-[10px] text-[#a6adc8]">{{ component.description }}</span>
-              <span class="mt-1 inline-flex rounded bg-[#313244] px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-[#94e2d5]">{{ component.source }}</span>
+              <span class="block truncate text-xs font-semibold text-[var(--vp-text-primary)]">{{ component.name }}</span>
+              <span class="mt-0.5 block truncate text-[10px] text-[var(--vp-text-secondary)]">{{ component.description }}</span>
+              <span class="mt-1 inline-flex rounded bg-[var(--vp-bg-hover)] px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-[var(--vp-info)]">{{ component.source }}</span>
             </span>
-            <IconGripVertical class="size-3.5 shrink-0 text-[#6c7086] opacity-0 transition-opacity group-hover:opacity-100" />
+            <IconGripVertical class="size-3.5 shrink-0 text-[var(--vp-text-tertiary)] opacity-0 transition-opacity group-hover:opacity-100" />
           </button>
         </div>
       </div>

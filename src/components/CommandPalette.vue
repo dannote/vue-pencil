@@ -80,12 +80,12 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeyDown))
 <template>
   <Teleport to="body">
     <div v-if="open" class="fixed inset-0 z-[70] bg-black/35 backdrop-blur-sm" @pointerdown.self="close">
-      <div class="mx-auto mt-24 w-[520px] max-w-[calc(100vw-32px)] overflow-hidden rounded-2xl border border-[#45475a] bg-[#1e1e2e] shadow-2xl shadow-black/40">
-        <div class="border-b border-[#313244] p-3">
+      <div class="mx-auto mt-24 w-[520px] max-w-[calc(100vw-32px)] overflow-hidden rounded-2xl border border-[var(--vp-border-strong)] bg-[var(--vp-bg-panel)] shadow-2xl shadow-black/40">
+        <div class="border-b border-[var(--vp-bg-hover)] p-3">
           <input
             ref="inputRef"
             v-model="query"
-            class="w-full rounded-xl border border-[#45475a] bg-[#181825] px-3 py-2.5 text-sm font-medium text-[#cdd6f4] outline-none placeholder:text-[#6c7086] focus:border-[#89b4fa]"
+            class="w-full rounded-xl border border-[var(--vp-border-strong)] bg-[var(--vp-bg-panel-raised)] px-3 py-2.5 text-sm font-medium text-[var(--vp-text-primary)] outline-none placeholder:text-[var(--vp-text-tertiary)] focus:border-[var(--vp-accent-hover)]"
             placeholder="Search commands..."
           >
         </div>
@@ -94,21 +94,21 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeyDown))
             v-for="(command, index) in filteredCommands"
             :key="command.id"
             class="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors"
-            :class="index === selectedIndex ? 'bg-[#4361ee] text-white' : 'text-[#cdd6f4] hover:bg-[#313244]'"
+            :class="index === selectedIndex ? 'bg-[var(--vp-accent)] text-white' : 'text-[var(--vp-text-primary)] hover:bg-[var(--vp-bg-hover)]'"
             @mousemove="selectedIndex = index"
             @click="run(command)"
           >
             <span class="min-w-0 flex-1">
               <span class="block truncate text-sm font-semibold">{{ command.title }}</span>
-              <span v-if="command.description" class="mt-0.5 block truncate text-xs" :class="index === selectedIndex ? 'text-white/75' : 'text-[#a6adc8]'">
+              <span v-if="command.description" class="mt-0.5 block truncate text-xs" :class="index === selectedIndex ? 'text-white/75' : 'text-[var(--vp-text-secondary)]'">
                 {{ command.description }}
               </span>
             </span>
-            <span v-if="command.shortcut" class="rounded bg-black/20 px-1.5 py-0.5 text-[10px] font-semibold" :class="index === selectedIndex ? 'text-white/80' : 'text-[#a6adc8]'">
+            <span v-if="command.shortcut" class="rounded bg-black/20 px-1.5 py-0.5 text-[10px] font-semibold" :class="index === selectedIndex ? 'text-white/80' : 'text-[var(--vp-text-secondary)]'">
               {{ command.shortcut }}
             </span>
           </button>
-          <div v-if="filteredCommands.length === 0" class="px-3 py-8 text-center text-sm text-[#a6adc8]">
+          <div v-if="filteredCommands.length === 0" class="px-3 py-8 text-center text-sm text-[var(--vp-text-secondary)]">
             No commands found
           </div>
         </div>

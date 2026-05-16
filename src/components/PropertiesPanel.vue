@@ -58,13 +58,13 @@ function onFrameChange(prop: keyof FrameLayout, value: number) {
 </script>
 
 <template>
-  <div class="fixed top-10 right-0 bottom-0 z-40 w-72 overflow-y-auto border-l border-[#313244] bg-[#1e1e2e]">
+  <div class="fixed top-10 right-0 bottom-0 z-40 w-72 overflow-y-auto border-l border-[var(--vp-bg-hover)] bg-[var(--vp-bg-panel)]">
     <template v-if="node">
       <!-- Header -->
-      <div class="flex items-center gap-1.5 border-b border-[#313244] px-4 py-2">
-        <span class="text-[11px] text-[#a6adc8]">{{ nodeDisplayKind(node) }}</span>
-        <span class="text-xs font-semibold text-[#cdd6f4]">{{ nodeDisplayName(node) }}</span>
-        <span v-if="nodeDisplayDetail(node)" class="text-[10px] text-[#6c7086]">{{ nodeDisplayDetail(node) }}</span>
+      <div class="flex items-center gap-1.5 border-b border-[var(--vp-bg-hover)] px-4 py-2">
+        <span class="text-[11px] text-[var(--vp-text-secondary)]">{{ nodeDisplayKind(node) }}</span>
+        <span class="text-xs font-semibold text-[var(--vp-text-primary)]">{{ nodeDisplayName(node) }}</span>
+        <span v-if="nodeDisplayDetail(node)" class="text-[10px] text-[var(--vp-text-tertiary)]">{{ nodeDisplayDetail(node) }}</span>
       </div>
 
       <ComponentSection v-if="!isSlot" :node="node" />
@@ -105,7 +105,7 @@ function onFrameChange(prop: keyof FrameLayout, value: number) {
       />
     </template>
 
-    <div v-else class="px-4 py-8 text-center text-xs text-[#a6adc8]">
+    <div v-else class="px-4 py-8 text-center text-xs text-[var(--vp-text-secondary)]">
       Select an element
     </div>
   </div>

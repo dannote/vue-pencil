@@ -79,23 +79,23 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeyDown))
 </script>
 
 <template>
-  <div class="fixed top-0 left-0 right-0 z-50 flex h-10 items-center justify-between border-b border-[#313244] bg-[#1e1e2e]/95 px-3 backdrop-blur">
+  <div class="fixed top-0 left-0 right-0 z-50 flex h-10 items-center justify-between border-b border-[var(--vp-bg-hover)] bg-[var(--vp-bg-panel)]/95 px-3 backdrop-blur">
     <div class="flex min-w-40 items-center gap-2">
-      <span v-if="preview" class="rounded-md bg-[#313244] px-2 py-1 text-xs font-medium text-[#cdd6f4]">Preview Mode</span>
+      <span v-if="preview" class="rounded-md bg-[var(--vp-bg-hover)] px-2 py-1 text-xs font-medium text-[var(--vp-text-primary)]">Preview Mode</span>
       <span v-else class="flex min-w-0 items-baseline gap-1.5">
-        <span class="max-w-40 truncate text-xs font-semibold text-[#cdd6f4]">{{ statusTitle || activeLabel }}</span>
-        <span v-if="statusDetail" class="max-w-44 truncate text-[10px] font-medium text-[#6c7086]">{{ statusDetail }}</span>
+        <span class="max-w-40 truncate text-xs font-semibold text-[var(--vp-text-primary)]">{{ statusTitle || activeLabel }}</span>
+        <span v-if="statusDetail" class="max-w-44 truncate text-[10px] font-medium text-[var(--vp-text-tertiary)]">{{ statusDetail }}</span>
       </span>
     </div>
 
-    <span class="text-[13px] font-semibold tracking-wide text-[#a6adc8]">VuePencil</span>
+    <span class="text-[13px] font-semibold tracking-wide text-[var(--vp-text-secondary)]">VuePencil</span>
 
     <div class="flex min-w-40 items-center justify-end gap-3">
       <button
         class="flex h-7 items-center gap-1.5 rounded-md px-3 text-xs font-semibold transition-colors"
         :class="preview
-          ? 'bg-[#a6e3a1] text-[#1e1e2e]'
-          : 'bg-[#313244] text-[#a6adc8] hover:bg-[#45475a] hover:text-[#cdd6f4]'"
+          ? 'bg-[var(--vp-success)] text-[var(--vp-bg-panel)]'
+          : 'bg-[var(--vp-bg-hover)] text-[var(--vp-text-secondary)] hover:bg-[var(--vp-border-strong)] hover:text-[var(--vp-text-primary)]'"
         @click="emit('update:preview', !preview)"
       >
         <IconX v-if="preview" class="size-3.5" />
@@ -104,31 +104,31 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeyDown))
       </button>
       <DropdownMenuRoot>
         <DropdownMenuTrigger as-child>
-          <button class="flex h-7 min-w-[58px] items-center justify-center gap-1 rounded-md px-2 text-[11px] font-semibold tabular-nums text-[#a6adc8] transition-colors hover:bg-[#313244] hover:text-[#cdd6f4]">
+          <button class="flex h-7 min-w-[58px] items-center justify-center gap-1 rounded-md px-2 text-[11px] font-semibold tabular-nums text-[var(--vp-text-secondary)] transition-colors hover:bg-[var(--vp-bg-hover)] hover:text-[var(--vp-text-primary)]">
             {{ Math.round(zoom * 100) }}%
             <IconChevronDown class="size-3" />
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuPortal>
-          <DropdownMenuContent side="bottom" :side-offset="8" align="end" class="z-[60] min-w-40 rounded-xl border border-[#45475a] bg-[#1e1e2e] p-1 text-[#cdd6f4] shadow-2xl shadow-black/30">
-            <DropdownMenuItem class="flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium outline-none hover:bg-[#313244] data-[highlighted]:bg-[#313244]" @select="emit('zoom-in')">
+          <DropdownMenuContent side="bottom" :side-offset="8" align="end" class="z-[60] min-w-40 rounded-xl border border-[var(--vp-border-strong)] bg-[var(--vp-bg-panel)] p-1 text-[var(--vp-text-primary)] shadow-2xl shadow-black/30">
+            <DropdownMenuItem class="flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium outline-none hover:bg-[var(--vp-bg-hover)] data-[highlighted]:bg-[var(--vp-bg-hover)]" @select="emit('zoom-in')">
               <IconZoomIn class="size-3.5" />
               <span class="flex-1">Zoom In</span>
-              <span class="text-[10px] text-[#6c7086]">⌘+</span>
+              <span class="text-[10px] text-[var(--vp-text-tertiary)]">⌘+</span>
             </DropdownMenuItem>
-            <DropdownMenuItem class="flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium outline-none hover:bg-[#313244] data-[highlighted]:bg-[#313244]" @select="emit('zoom-out')">
+            <DropdownMenuItem class="flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium outline-none hover:bg-[var(--vp-bg-hover)] data-[highlighted]:bg-[var(--vp-bg-hover)]" @select="emit('zoom-out')">
               <IconZoomOut class="size-3.5" />
               <span class="flex-1">Zoom Out</span>
-              <span class="text-[10px] text-[#6c7086]">⌘-</span>
+              <span class="text-[10px] text-[var(--vp-text-tertiary)]">⌘-</span>
             </DropdownMenuItem>
-            <DropdownMenuItem class="flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium outline-none hover:bg-[#313244] data-[highlighted]:bg-[#313244]" @select="emit('zoom-reset')">
+            <DropdownMenuItem class="flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium outline-none hover:bg-[var(--vp-bg-hover)] data-[highlighted]:bg-[var(--vp-bg-hover)]" @select="emit('zoom-reset')">
               <span class="flex-1">Actual Size</span>
-              <span class="text-[10px] text-[#6c7086]">100%</span>
+              <span class="text-[10px] text-[var(--vp-text-tertiary)]">100%</span>
             </DropdownMenuItem>
-            <DropdownMenuItem class="flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium outline-none hover:bg-[#313244] data-[highlighted]:bg-[#313244]" @select="emit('zoom-fit')">
+            <DropdownMenuItem class="flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium outline-none hover:bg-[var(--vp-bg-hover)] data-[highlighted]:bg-[var(--vp-bg-hover)]" @select="emit('zoom-fit')">
               <span class="flex-1">Zoom to Fit</span>
             </DropdownMenuItem>
-            <DropdownMenuItem class="flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium outline-none hover:bg-[#313244] data-[highlighted]:bg-[#313244]" @select="emit('zoom-selection')">
+            <DropdownMenuItem class="flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium outline-none hover:bg-[var(--vp-bg-hover)] data-[highlighted]:bg-[var(--vp-bg-hover)]" @select="emit('zoom-selection')">
               <span class="flex-1">Zoom to Selection</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -138,21 +138,21 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeyDown))
   </div>
 
   <div v-if="!preview" class="fixed bottom-4 left-1/2 z-50 -translate-x-1/2">
-    <div class="flex items-center gap-0.5 rounded-xl border border-[#45475a] bg-[#1e1e2e]/95 p-1 shadow-2xl shadow-black/30 backdrop-blur">
+    <div class="flex items-center gap-0.5 rounded-xl border border-[var(--vp-border-strong)] bg-[var(--vp-bg-panel)]/95 p-1 shadow-2xl shadow-black/30 backdrop-blur">
       <button
         v-for="t in primaryTools.slice(0, 2)"
         :key="t.name"
         class="group relative flex size-8 cursor-pointer items-center justify-center rounded-lg border-none transition-colors"
         :class="activeTool === t.name
-          ? 'bg-[#4361ee] text-white'
-          : 'bg-transparent text-[#a6adc8] hover:bg-[#313244] hover:text-[#f5f5f5]'"
+          ? 'bg-[var(--vp-accent)] text-white'
+          : 'bg-transparent text-[var(--vp-text-secondary)] hover:bg-[var(--vp-bg-hover)] hover:text-[var(--vp-text-primary)]'"
         :aria-label="t.label"
         :title="`${t.label} (${t.key})`"
         @click="selectTool(t.name)"
       >
         <component :is="t.icon" class="size-4" />
-        <span class="pointer-events-none absolute -top-9 left-1/2 hidden -translate-x-1/2 whitespace-nowrap rounded-md border border-[#45475a] bg-[#181825] px-2 py-1 text-[11px] font-medium text-[#cdd6f4] shadow-lg group-hover:block">
-          {{ t.label }} <span class="text-[#6c7086]">{{ t.key }}</span>
+        <span class="pointer-events-none absolute -top-9 left-1/2 hidden -translate-x-1/2 whitespace-nowrap rounded-md border border-[var(--vp-border-strong)] bg-[var(--vp-bg-panel-raised)] px-2 py-1 text-[11px] font-medium text-[var(--vp-text-primary)] shadow-lg group-hover:block">
+          {{ t.label }} <span class="text-[var(--vp-text-tertiary)]">{{ t.key }}</span>
         </span>
       </button>
 
@@ -160,14 +160,14 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeyDown))
         <button
           class="group relative flex size-8 cursor-pointer items-center justify-center rounded-lg border-none transition-colors"
           :class="shapeActive
-            ? 'bg-[#4361ee] text-white'
-            : 'bg-transparent text-[#a6adc8] hover:bg-[#313244] hover:text-[#f5f5f5]'"
+            ? 'bg-[var(--vp-accent)] text-white'
+            : 'bg-transparent text-[var(--vp-text-secondary)] hover:bg-[var(--vp-bg-hover)] hover:text-[var(--vp-text-primary)]'"
           :title="`${activeShapeTool.label} (${activeShapeTool.key})`"
           @click="selectTool(activeShapeTool.name)"
         >
           <component :is="activeShapeTool.icon" class="size-4" />
-          <span class="pointer-events-none absolute -top-9 left-1/2 hidden -translate-x-1/2 whitespace-nowrap rounded-md border border-[#45475a] bg-[#181825] px-2 py-1 text-[11px] font-medium text-[#cdd6f4] shadow-lg group-hover:block">
-            Shape <span class="text-[#6c7086]">R/O</span>
+          <span class="pointer-events-none absolute -top-9 left-1/2 hidden -translate-x-1/2 whitespace-nowrap rounded-md border border-[var(--vp-border-strong)] bg-[var(--vp-bg-panel-raised)] px-2 py-1 text-[11px] font-medium text-[var(--vp-text-primary)] shadow-lg group-hover:block">
+            Shape <span class="text-[var(--vp-text-tertiary)]">R/O</span>
           </span>
         </button>
 
@@ -176,8 +176,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeyDown))
             <button
               class="flex h-8 w-3 cursor-pointer items-center justify-center rounded-lg border-none transition-colors"
               :class="shapeActive
-                ? 'bg-[#4361ee] text-white'
-                : 'bg-transparent text-[#a6adc8] hover:bg-[#313244] hover:text-[#f5f5f5]'"
+                ? 'bg-[var(--vp-accent)] text-white'
+                : 'bg-transparent text-[var(--vp-text-secondary)] hover:bg-[var(--vp-bg-hover)] hover:text-[var(--vp-text-primary)]'"
               aria-label="Shape tools"
             >
               <IconChevronDown class="size-2.5" />
@@ -188,18 +188,18 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeyDown))
               side="top"
               :side-offset="8"
               align="start"
-              class="z-[60] min-w-36 rounded-xl border border-[#45475a] bg-[#1e1e2e] p-1 text-[#cdd6f4] shadow-2xl shadow-black/30"
+              class="z-[60] min-w-36 rounded-xl border border-[var(--vp-border-strong)] bg-[var(--vp-bg-panel)] p-1 text-[var(--vp-text-primary)] shadow-2xl shadow-black/30"
             >
               <DropdownMenuItem
                 v-for="tool in shapeTools"
                 :key="tool.name"
-                class="flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium outline-none hover:bg-[#313244] data-[highlighted]:bg-[#313244]"
-                :class="activeTool === tool.name ? 'bg-[#4361ee] text-white' : ''"
+                class="flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium outline-none hover:bg-[var(--vp-bg-hover)] data-[highlighted]:bg-[var(--vp-bg-hover)]"
+                :class="activeTool === tool.name ? 'bg-[var(--vp-accent)] text-white' : ''"
                 @select="selectTool(tool.name)"
               >
                 <component :is="tool.icon" class="size-3.5" />
                 <span class="flex-1">{{ tool.label }}</span>
-                <span class="text-[11px] text-[#6c7086]">{{ tool.key }}</span>
+                <span class="text-[11px] text-[var(--vp-text-tertiary)]">{{ tool.key }}</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenuPortal>
@@ -211,15 +211,15 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeyDown))
         :key="t.name"
         class="group relative flex size-8 cursor-pointer items-center justify-center rounded-lg border-none transition-colors"
         :class="activeTool === t.name
-          ? 'bg-[#4361ee] text-white'
-          : 'bg-transparent text-[#a6adc8] hover:bg-[#313244] hover:text-[#f5f5f5]'"
+          ? 'bg-[var(--vp-accent)] text-white'
+          : 'bg-transparent text-[var(--vp-text-secondary)] hover:bg-[var(--vp-bg-hover)] hover:text-[var(--vp-text-primary)]'"
         :aria-label="t.label"
         :title="`${t.label} (${t.key})`"
         @click="selectTool(t.name)"
       >
         <component :is="t.icon" class="size-4" />
-        <span class="pointer-events-none absolute -top-9 left-1/2 hidden -translate-x-1/2 whitespace-nowrap rounded-md border border-[#45475a] bg-[#181825] px-2 py-1 text-[11px] font-medium text-[#cdd6f4] shadow-lg group-hover:block">
-          {{ t.label }} <span class="text-[#6c7086]">{{ t.key }}</span>
+        <span class="pointer-events-none absolute -top-9 left-1/2 hidden -translate-x-1/2 whitespace-nowrap rounded-md border border-[var(--vp-border-strong)] bg-[var(--vp-bg-panel-raised)] px-2 py-1 text-[11px] font-medium text-[var(--vp-text-primary)] shadow-lg group-hover:block">
+          {{ t.label }} <span class="text-[var(--vp-text-tertiary)]">{{ t.key }}</span>
         </span>
       </button>
     </div>
