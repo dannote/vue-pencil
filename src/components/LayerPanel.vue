@@ -37,7 +37,7 @@ const libraryGroups = computed(() => {
   const items: LibraryListItem[] = [
     ...LIBRARY_COMPONENTS.map((component) => ({
       ...component,
-      source: 'reka-ui',
+      source: component.id.startsWith('layout.') ? 'vue-pencil' : 'reka-ui',
       icon: component.id === 'layout.card'
         ? IconPanelTop
         : component.id === 'reka.switch'

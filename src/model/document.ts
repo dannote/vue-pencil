@@ -362,6 +362,18 @@ export const useDocumentStore = defineStore('document', () => {
     return node
   }
 
+  function insertLibraryComponentInto(componentId: string, parentNodeId: string): DesignNode | null {
+    recordHistory()
+    const node = instantiateLibraryComponent(componentId)
+    if (!node) return null
+    const parent = findNodeInDocument(parentNodeId)
+    if (!parent || !isContainerNode(parent)) return null
+
+    insertChild(parent, node)
+    select(node.id)
+    return node
+  }
+
   function insertLibraryComponentAt(componentId: string, x: number, y: number, targetNodeId?: string): DesignNode | null {
     recordHistory()
     const node = instantiateLibraryComponent(componentId)
@@ -548,6 +560,7 @@ export const useDocumentStore = defineStore('document', () => {
     makeNodeSlot,
     createComponentFromNode,
     insertLibraryComponent,
+    insertLibraryComponentInto,
     insertLibraryComponentAt,
     moveFrameInto,
     extractNodeToFrame,
