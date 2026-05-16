@@ -1,9 +1,16 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import type { Component } from 'vue'
+import IconBox from '~icons/lucide/box'
+import IconComponent from '~icons/lucide/component'
+import IconGripVertical from '~icons/lucide/grip-vertical'
+import IconLibrary from '~icons/lucide/library'
+import IconToggleRight from '~icons/lucide/toggle-right'
+
 import type { DesignNode } from '@/model/types'
-import { nodeDisplayName } from '@/model/display'
 import { LIBRARY_COMPONENTS } from '@/model/library'
 import { useDocumentStore } from '@/model/document'
+import LayerTreeItem from './LayerTreeItem.vue'
 
 defineProps<{
   frames: DesignNode[]
@@ -17,16 +24,24 @@ interface LibraryListItem {
   name: string
   group: string
   description: string
+  source: string
+  icon: Component
 }
 
 const libraryGroups = computed(() => {
   const items: LibraryListItem[] = [
-    ...LIBRARY_COMPONENTS,
+    ...LIBRARY_COMPONENTS.map((component) => ({
+      ...component,
+      source: 'reka-ui',
+      icon: component.id === 'reka-switch' ? IconToggleRight : IconBox,
+    })),
     ...store.componentDefs.map((component) => ({
       id: `local:${component.id}`,
       name: component.name,
       group: 'Local components',
       description: 'Component created from this file.',
+      source: 'local',
+      icon: IconComponent,
     })),
   ]
 
@@ -36,14 +51,6 @@ const libraryGroups = computed(() => {
   }
   return [...groups.entries()].map(([name, components]) => ({ name, components }))
 })
-
-function nodeLabel(node: DesignNode): string {
-  return nodeDisplayName(node)
-}
-
-function isSelected(id: string): boolean {
-  return store.selectedIds.has(id)
-}
 
 function onLibraryDragStart(event: DragEvent, componentId: string) {
   event.dataTransfer?.setData('application/x-vue-pencil-library-component', componentId)
@@ -72,52 +79,43 @@ function onLibraryDragStart(event: DragEvent, componentId: string) {
     </div>
 
     <template v-if="tab === 'layers'">
-      <div class="px-4 pt-2 pb-2 text-[11px] font-semibold uppercase tracking-widest text-[#a6adc8]">
-        Layers
+      <div class="flex items-center justify-between px-4 pt-2 pb-2 text-[11px] font-semibold uppercase tracking-widest text-[#a6adc8]">
+        <span>Layers</span>
+        <span class="rounded bg-[#313244] px-1.5 py-0.5 text-[9px] tracking-normal text-[#6c7086]">{{ frames.length }}</span>
       </div>
-      <div v-for="frame in frames" :key="frame.id" class="mb-2">
-        <button
-          class="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-left text-xs transition-colors"
-          :class="isSelected(frame.id) ? 'bg-[#4361ee] text-white' : 'text-[#cdd6f4] hover:bg-[#313244]'"
-          @click="store.select(frame.id)"
-        >
-          <span class="text-[10px]">▸</span>
-          {{ nodeLabel(frame) }}
-        </button>
-        <div v-for="child in frame.children" :key="typeof child === 'string' ? child : child.id" class="pl-4">
-          <template v-if="typeof child !== 'string'">
-            <button
-              class="flex w-full items-center gap-2 rounded-md px-3 py-1 text-left text-xs transition-colors"
-              :class="isSelected(child.id) ? 'bg-[#4361ee] text-white' : 'text-[#a6adc8] hover:bg-[#313244]'"
-              @click="store.select(child.id)"
-            >
-              {{ nodeLabel(child) }}
-            </button>
-          </template>
-        </div>
+      <div class="space-y-0.5 px-2 pb-4">
+        <LayerTreeItem v-for="frame in frames" :key="frame.id" :node="frame" />
       </div>
     </template>
 
     <template v-else>
-      <div class="px-4 pt-2 pb-2 text-[11px] font-semibold uppercase tracking-widest text-[#a6adc8]">
-        Library
+      <div class="flex items-center gap-2 px-4 pt-2 pb-2 text-[11px] font-semibold uppercase tracking-widest text-[#a6adc8]">
+        <IconLibrary class="size-3.5" />
+        <span>Assets</span>
       </div>
       <div class="space-y-4 px-3 pb-4">
-        <div v-for="group in libraryGroups" :key="group.name" class="space-y-2">
-          <div class="text-[10px] font-medium uppercase tracking-wide text-[#6c7086]">
+        <div v-for="group in libraryGroups" :key="group.name" class="space-y-1.5">
+          <div class="px-1 text-[10px] font-semibold uppercase tracking-wide text-[#6c7086]">
             {{ group.name }}
           </div>
           <button
             v-for="component in group.components"
             :key="component.id"
-            class="w-full rounded-lg border border-[#45475a] bg-[#181825] p-3 text-left transition-colors hover:border-[#89b4fa] hover:bg-[#313244]"
+            class="group flex w-full items-center gap-2 rounded-lg border border-transparent bg-transparent px-2 py-2 text-left transition-colors hover:border-[#45475a] hover:bg-[#313244]"
             :title="component.description"
             draggable="true"
             @dragstart="onLibraryDragStart($event, component.id)"
             @click="store.insertLibraryComponent(component.id)"
           >
-            <div class="text-xs font-semibold text-[#cdd6f4]">{{ component.name }}</div>
-            <div class="mt-1 text-[10px] leading-snug text-[#a6adc8]">{{ component.description }}</div>
+            <span class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-[#181825] text-[#89b4fa] ring-1 ring-[#45475a] transition-colors group-hover:ring-[#89b4fa]">
+              <component :is="component.icon" class="size-4" />
+            </span>
+            <span class="min-w-0 flex-1">
+              <span class="block truncate text-xs font-semibold text-[#cdd6f4]">{{ component.name }}</span>
+              <span class="mt-0.5 block truncate text-[10px] text-[#a6adc8]">{{ component.description }}</span>
+              <span class="mt-1 inline-flex rounded bg-[#313244] px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-[#94e2d5]">{{ component.source }}</span>
+            </span>
+            <IconGripVertical class="size-3.5 shrink-0 text-[#6c7086] opacity-0 transition-opacity group-hover:opacity-100" />
           </button>
         </div>
       </div>
