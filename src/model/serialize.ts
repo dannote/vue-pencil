@@ -224,7 +224,18 @@ function capabilityScript(capabilities: CapabilityInstance[], componentImports: 
   return ['<script setup lang="ts">', ...imports, '', ...lines, '</script>'].join('\n')
 }
 
-const REKA_COMPONENTS = new Set(['SwitchRoot', 'SwitchThumb'])
+const REKA_COMPONENTS = new Set([
+  'CheckboxIndicator',
+  'CheckboxRoot',
+  'ProgressIndicator',
+  'ProgressRoot',
+  'SliderRange',
+  'SliderRoot',
+  'SliderThumb',
+  'SliderTrack',
+  'SwitchRoot',
+  'SwitchThumb',
+])
 
 function collectRekaImports(node: DesignNode | string, imports = new Set<string>()): Set<string> {
   if (typeof node === 'string') return imports

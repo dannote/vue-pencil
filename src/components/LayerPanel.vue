@@ -5,6 +5,8 @@ import IconBox from '~icons/lucide/box'
 import IconComponent from '~icons/lucide/component'
 import IconGripVertical from '~icons/lucide/grip-vertical'
 import IconLibrary from '~icons/lucide/library'
+import IconSlidersHorizontal from '~icons/lucide/sliders-horizontal'
+import IconSquareCheck from '~icons/lucide/square-check'
 import IconToggleRight from '~icons/lucide/toggle-right'
 
 import type { DesignNode } from '@/model/types'
@@ -33,7 +35,13 @@ const libraryGroups = computed(() => {
     ...LIBRARY_COMPONENTS.map((component) => ({
       ...component,
       source: 'reka-ui',
-      icon: component.id === 'reka-switch' ? IconToggleRight : IconBox,
+      icon: component.id === 'reka.switch'
+        ? IconToggleRight
+        : component.id === 'reka.checkbox'
+          ? IconSquareCheck
+          : component.id === 'reka.slider'
+            ? IconSlidersHorizontal
+            : IconBox,
     })),
     ...store.componentDefs.map((component) => ({
       id: `local:${component.id}`,

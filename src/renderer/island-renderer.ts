@@ -1,5 +1,5 @@
 import { createApp, h, ref, type VNode, type App, type Ref } from 'vue'
-import { SwitchRoot, SwitchThumb } from 'reka-ui'
+import { CheckboxIndicator, CheckboxRoot, ProgressIndicator, ProgressRoot, SliderRange, SliderRoot, SliderThumb, SliderTrack, SwitchRoot, SwitchThumb } from 'reka-ui'
 import type { Binding, CapabilityInstance, DesignNode } from '@/model/types'
 import { bindingPreviewValue, styleBindingPreview, textBindingPreview } from './preview-values'
 
@@ -9,6 +9,14 @@ export interface IslandRuntime {
 }
 
 const COMPONENTS: Record<string, unknown> = {
+  CheckboxIndicator,
+  CheckboxRoot,
+  ProgressIndicator,
+  ProgressRoot,
+  SliderRange,
+  SliderRoot,
+  SliderThumb,
+  SliderTrack,
   SwitchRoot,
   SwitchThumb,
 }
@@ -75,6 +83,9 @@ input:focus{border-color:#4361ee !important}
 [style*="cursor: pointer"]:hover{transform:scale(1.03)}
 .vp-switch-root[data-state="checked"]{background:#4361ee!important}
 .vp-switch-root[data-state="checked"] .vp-switch-thumb{transform:translateX(20px)}
+.vp-checkbox-root[data-state="checked"]{background:#4361ee!important;border-color:#4361ee!important}
+.vp-checkbox-root[data-state="unchecked"] .vp-checkbox-indicator{display:none}
+.vp-progress-root .vp-progress-indicator{transform:translateX(-52%)}
 [contenteditable]{user-select:text;-webkit-user-select:text}
 </style></head><body><div id="root"></div></body></html>`,
   )

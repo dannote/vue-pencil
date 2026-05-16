@@ -158,7 +158,7 @@ const commands = computed<CommandItem[]>(() => {
       title: 'Insert Reka Switch',
       description: 'Add a semantic Switch component instance',
       run: () => {
-        store.insertLibraryComponent('reka-switch')
+        store.insertLibraryComponent('reka.switch')
         showToast('Switch inserted')
       },
     },

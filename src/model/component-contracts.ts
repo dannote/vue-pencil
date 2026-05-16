@@ -54,6 +54,75 @@ export const COMPONENT_CONTRACTS: ComponentContract[] = [
       { id: 'thumb', label: 'Thumb', nodeType: 'SwitchThumb', part: 'thumb' },
     ],
   },
+  {
+    type: 'CheckboxRoot',
+    label: 'Checkbox',
+    library: 'reka-ui',
+    properties: [
+      {
+        id: 'value',
+        label: 'Checked',
+        description: 'The checked state controlled by this checkbox.',
+        targetProp: 'v-model',
+        accepts: ['boolean'],
+      },
+      {
+        id: 'disabled',
+        label: 'Disabled',
+        description: 'Prevent interaction with this checkbox.',
+        targetProp: 'disabled',
+        accepts: ['boolean'],
+      },
+    ],
+    parts: [
+      { id: 'box', label: 'Box', nodeType: 'CheckboxRoot', part: 'root' },
+      { id: 'indicator', label: 'Indicator', nodeType: 'CheckboxIndicator', part: 'indicator' },
+    ],
+  },
+  {
+    type: 'SliderRoot',
+    label: 'Slider',
+    library: 'reka-ui',
+    properties: [
+      {
+        id: 'value',
+        label: 'Value',
+        description: 'The numeric value controlled by this slider.',
+        targetProp: 'v-model',
+        accepts: ['number'],
+      },
+      {
+        id: 'disabled',
+        label: 'Disabled',
+        description: 'Prevent interaction with this slider.',
+        targetProp: 'disabled',
+        accepts: ['boolean'],
+      },
+    ],
+    parts: [
+      { id: 'track', label: 'Track', nodeType: 'SliderTrack', part: 'track' },
+      { id: 'range', label: 'Range', nodeType: 'SliderRange', part: 'range' },
+      { id: 'thumb', label: 'Thumb', nodeType: 'SliderThumb', part: 'thumb' },
+    ],
+  },
+  {
+    type: 'ProgressRoot',
+    label: 'Progress',
+    library: 'reka-ui',
+    properties: [
+      {
+        id: 'value',
+        label: 'Value',
+        description: 'The current progress value.',
+        targetProp: 'modelValue',
+        accepts: ['number'],
+      },
+    ],
+    parts: [
+      { id: 'track', label: 'Track', nodeType: 'ProgressRoot', part: 'root' },
+      { id: 'indicator', label: 'Indicator', nodeType: 'ProgressIndicator', part: 'indicator' },
+    ],
+  },
 ]
 
 export function getComponentContract(node: DesignNode): ComponentContract | undefined {
