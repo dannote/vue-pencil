@@ -38,6 +38,27 @@ export const LIBRARY_COMPONENTS: LibraryComponent[] = [
     description: 'Progress meter with value-driven indicator.',
     createNode: createProgressNode,
   },
+  {
+    id: 'reka.tabs',
+    name: 'Tabs',
+    group: 'Navigation',
+    description: 'Tabbed interface with semantic list, triggers, and panels.',
+    createNode: createTabsNode,
+  },
+  {
+    id: 'reka.accordion',
+    name: 'Accordion',
+    group: 'Disclosure',
+    description: 'Expandable content sections with trigger and content parts.',
+    createNode: createAccordionNode,
+  },
+  {
+    id: 'reka.collapsible',
+    name: 'Collapsible',
+    group: 'Disclosure',
+    description: 'Single expandable region with trigger and content parts.',
+    createNode: createCollapsibleNode,
+  },
 ]
 
 export function createLibraryNode(componentId: string): DesignNode {
@@ -197,5 +218,162 @@ function createProgressNode(): DesignNode {
   indicator.meta.source = { kind: 'library', library: 'reka-ui', component: 'Progress', part: 'indicator' }
 
   root.children.push(indicator)
+  return root
+}
+
+function createTabsNode(): DesignNode {
+  const root = createNode('TabsRoot', {
+    width: '280px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '10px',
+    fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
+  }, [], 'Tabs')
+  root.props.defaultValue = 'overview'
+  root.meta.source = { kind: 'library', library: 'reka-ui', component: 'Tabs', part: 'root' }
+
+  const list = createNode('TabsList', {
+    display: 'inline-flex',
+    gap: '4px',
+    padding: '4px',
+    borderRadius: '10px',
+    background: '#313244',
+  }, [], 'List')
+  list.meta.source = { kind: 'library', library: 'reka-ui', component: 'Tabs', part: 'list' }
+  list.children.push(createTabsTriggerNode('Overview', 'overview'), createTabsTriggerNode('Details', 'details'))
+
+  root.children.push(
+    list,
+    createTabsContentNode('Overview panel', 'overview', 'Build interactive Vue UI visually.'),
+    createTabsContentNode('Details panel', 'details', 'Bind props to capabilities and export real code.'),
+  )
+  return root
+}
+
+function createTabsTriggerNode(name: string, value: string): DesignNode {
+  const trigger = createNode('TabsTrigger', {
+    padding: '8px 12px',
+    border: 'none',
+    borderRadius: '7px',
+    background: 'transparent',
+    color: '#cdd6f4',
+    fontSize: '13px',
+    fontWeight: '650',
+    cursor: 'pointer',
+  }, [name], name)
+  trigger.props.value = value
+  trigger.props.class = 'vp-tabs-trigger'
+  trigger.meta.source = { kind: 'library', library: 'reka-ui', component: 'Tabs', part: 'trigger' }
+  return trigger
+}
+
+function createTabsContentNode(name: string, value: string, text: string): DesignNode {
+  const content = createNode('TabsContent', {
+    padding: '14px',
+    borderRadius: '12px',
+    background: 'white',
+    color: '#1e1e2e',
+    fontSize: '14px',
+    lineHeight: '1.5',
+    boxShadow: '0 4px 18px rgba(0,0,0,0.12)',
+  }, [text], name)
+  content.props.value = value
+  content.meta.source = { kind: 'library', library: 'reka-ui', component: 'Tabs', part: 'content' }
+  return content
+}
+
+function createAccordionNode(): DesignNode {
+  const root = createNode('AccordionRoot', {
+    width: '300px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+    fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
+  }, [], 'Accordion')
+  root.props.type = 'single'
+  root.props.defaultValue = 'item-1'
+  root.props.collapsible = true
+  root.meta.source = { kind: 'library', library: 'reka-ui', component: 'Accordion', part: 'root' }
+  root.children.push(
+    createAccordionItemNode('item-1', 'What can this build?', 'Real Vue components with bindings and Reka primitives.'),
+    createAccordionItemNode('item-2', 'Can it export code?', 'Yes — the developer preview generates Vue SFC output.'),
+  )
+  return root
+}
+
+function createAccordionItemNode(value: string, title: string, content: string): DesignNode {
+  const item = createNode('AccordionItem', {
+    overflow: 'hidden',
+    borderRadius: '12px',
+    border: '1px solid #45475a',
+    background: '#181825',
+  }, [], title)
+  item.props.value = value
+  item.meta.source = { kind: 'library', library: 'reka-ui', component: 'Accordion', part: 'item' }
+
+  const header = createNode('AccordionHeader', { margin: '0' }, [], 'Header')
+  header.meta.source = { kind: 'library', library: 'reka-ui', component: 'Accordion', part: 'header' }
+
+  const trigger = createNode('AccordionTrigger', {
+    width: '100%',
+    padding: '12px 14px',
+    border: 'none',
+    background: 'transparent',
+    color: '#cdd6f4',
+    fontSize: '14px',
+    fontWeight: '700',
+    textAlign: 'left',
+    cursor: 'pointer',
+  }, [title], 'Trigger')
+  trigger.meta.source = { kind: 'library', library: 'reka-ui', component: 'Accordion', part: 'trigger' }
+
+  const contentNode = createNode('AccordionContent', {
+    padding: '0 14px 14px',
+    color: '#a6adc8',
+    fontSize: '13px',
+    lineHeight: '1.5',
+  }, [content], 'Content')
+  contentNode.meta.source = { kind: 'library', library: 'reka-ui', component: 'Accordion', part: 'content' }
+
+  header.children.push(trigger)
+  item.children.push(header, contentNode)
+  return item
+}
+
+function createCollapsibleNode(): DesignNode {
+  const root = createNode('CollapsibleRoot', {
+    width: '280px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+    fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
+  }, [], 'Collapsible')
+  root.props.defaultOpen = true
+  root.meta.source = { kind: 'library', library: 'reka-ui', component: 'Collapsible', part: 'root' }
+
+  const trigger = createNode('CollapsibleTrigger', {
+    padding: '10px 12px',
+    border: 'none',
+    borderRadius: '10px',
+    background: '#4361ee',
+    color: 'white',
+    fontSize: '14px',
+    fontWeight: '700',
+    cursor: 'pointer',
+  }, ['Toggle details'], 'Trigger')
+  trigger.meta.source = { kind: 'library', library: 'reka-ui', component: 'Collapsible', part: 'trigger' }
+
+  const content = createNode('CollapsibleContent', {
+    padding: '14px',
+    borderRadius: '12px',
+    background: 'white',
+    color: '#1e1e2e',
+    fontSize: '13px',
+    lineHeight: '1.5',
+    boxShadow: '0 4px 18px rgba(0,0,0,0.12)',
+  }, ['This region can collapse in preview mode.'], 'Content')
+  content.meta.source = { kind: 'library', library: 'reka-ui', component: 'Collapsible', part: 'content' }
+
+  root.children.push(trigger, content)
   return root
 }

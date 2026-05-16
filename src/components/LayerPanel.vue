@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import type { Component } from 'vue'
+import IconBookOpen from '~icons/lucide/book-open'
 import IconBox from '~icons/lucide/box'
 import IconComponent from '~icons/lucide/component'
 import IconGripVertical from '~icons/lucide/grip-vertical'
 import IconLibrary from '~icons/lucide/library'
+import IconListCollapse from '~icons/lucide/list-collapse'
 import IconSlidersHorizontal from '~icons/lucide/sliders-horizontal'
 import IconSquareCheck from '~icons/lucide/square-check'
 import IconToggleRight from '~icons/lucide/toggle-right'
@@ -41,7 +43,11 @@ const libraryGroups = computed(() => {
           ? IconSquareCheck
           : component.id === 'reka.slider'
             ? IconSlidersHorizontal
-            : IconBox,
+            : component.id === 'reka.tabs'
+              ? IconBookOpen
+              : component.id === 'reka.accordion' || component.id === 'reka.collapsible'
+                ? IconListCollapse
+                : IconBox,
     })),
     ...store.componentDefs.map((component) => ({
       id: `local:${component.id}`,

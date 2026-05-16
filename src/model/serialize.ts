@@ -225,8 +225,16 @@ function capabilityScript(capabilities: CapabilityInstance[], componentImports: 
 }
 
 const REKA_COMPONENTS = new Set([
+  'AccordionContent',
+  'AccordionHeader',
+  'AccordionItem',
+  'AccordionRoot',
+  'AccordionTrigger',
   'CheckboxIndicator',
   'CheckboxRoot',
+  'CollapsibleContent',
+  'CollapsibleRoot',
+  'CollapsibleTrigger',
   'ProgressIndicator',
   'ProgressRoot',
   'SliderRange',
@@ -235,6 +243,10 @@ const REKA_COMPONENTS = new Set([
   'SliderTrack',
   'SwitchRoot',
   'SwitchThumb',
+  'TabsContent',
+  'TabsList',
+  'TabsRoot',
+  'TabsTrigger',
 ])
 
 function collectRekaImports(node: DesignNode | string, imports = new Set<string>()): Set<string> {

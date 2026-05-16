@@ -123,6 +123,63 @@ export const COMPONENT_CONTRACTS: ComponentContract[] = [
       { id: 'indicator', label: 'Indicator', nodeType: 'ProgressIndicator', part: 'indicator' },
     ],
   },
+  {
+    type: 'TabsRoot',
+    label: 'Tabs',
+    library: 'reka-ui',
+    properties: [
+      {
+        id: 'value',
+        label: 'Active tab',
+        description: 'The selected tab value.',
+        targetProp: 'v-model',
+        accepts: ['string'],
+      },
+    ],
+    parts: [
+      { id: 'list', label: 'List', nodeType: 'TabsList', part: 'list' },
+      { id: 'trigger', label: 'Trigger', nodeType: 'TabsTrigger', part: 'trigger' },
+      { id: 'content', label: 'Content', nodeType: 'TabsContent', part: 'content' },
+    ],
+  },
+  {
+    type: 'AccordionRoot',
+    label: 'Accordion',
+    library: 'reka-ui',
+    properties: [
+      {
+        id: 'value',
+        label: 'Open item',
+        description: 'The currently open accordion item.',
+        targetProp: 'v-model',
+        accepts: ['string'],
+      },
+    ],
+    parts: [
+      { id: 'item', label: 'Item', nodeType: 'AccordionItem', part: 'item' },
+      { id: 'header', label: 'Header', nodeType: 'AccordionHeader', part: 'header' },
+      { id: 'trigger', label: 'Trigger', nodeType: 'AccordionTrigger', part: 'trigger' },
+      { id: 'content', label: 'Content', nodeType: 'AccordionContent', part: 'content' },
+    ],
+  },
+  {
+    type: 'CollapsibleRoot',
+    label: 'Collapsible',
+    library: 'reka-ui',
+    properties: [
+      {
+        id: 'open',
+        label: 'Open',
+        description: 'Whether the collapsible content is open.',
+        targetProp: 'v-model:open',
+        accepts: ['boolean'],
+      },
+    ],
+    parts: [
+      { id: 'trigger', label: 'Trigger', nodeType: 'CollapsibleTrigger', part: 'trigger' },
+      { id: 'content', label: 'Content', nodeType: 'CollapsibleContent', part: 'content' },
+    ],
+  },
 ]
 
 export function getComponentContract(node: DesignNode): ComponentContract | undefined {

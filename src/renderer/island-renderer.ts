@@ -1,5 +1,5 @@
 import { createApp, h, ref, type VNode, type App, type Ref } from 'vue'
-import { CheckboxIndicator, CheckboxRoot, ProgressIndicator, ProgressRoot, SliderRange, SliderRoot, SliderThumb, SliderTrack, SwitchRoot, SwitchThumb } from 'reka-ui'
+import { AccordionContent, AccordionHeader, AccordionItem, AccordionRoot, AccordionTrigger, CheckboxIndicator, CheckboxRoot, CollapsibleContent, CollapsibleRoot, CollapsibleTrigger, ProgressIndicator, ProgressRoot, SliderRange, SliderRoot, SliderThumb, SliderTrack, SwitchRoot, SwitchThumb, TabsContent, TabsList, TabsRoot, TabsTrigger } from 'reka-ui'
 import type { Binding, CapabilityInstance, DesignNode } from '@/model/types'
 import { bindingPreviewValue, styleBindingPreview, textBindingPreview } from './preview-values'
 
@@ -9,8 +9,16 @@ export interface IslandRuntime {
 }
 
 const COMPONENTS: Record<string, unknown> = {
+  AccordionContent,
+  AccordionHeader,
+  AccordionItem,
+  AccordionRoot,
+  AccordionTrigger,
   CheckboxIndicator,
   CheckboxRoot,
+  CollapsibleContent,
+  CollapsibleRoot,
+  CollapsibleTrigger,
   ProgressIndicator,
   ProgressRoot,
   SliderRange,
@@ -19,6 +27,10 @@ const COMPONENTS: Record<string, unknown> = {
   SliderTrack,
   SwitchRoot,
   SwitchThumb,
+  TabsContent,
+  TabsList,
+  TabsRoot,
+  TabsTrigger,
 }
 
 function renderDesignNode(node: DesignNode | string, runtime: IslandRuntime): VNode | string {
@@ -86,6 +98,7 @@ input:focus{border-color:#4361ee !important}
 .vp-checkbox-root[data-state="checked"]{background:#4361ee!important;border-color:#4361ee!important}
 .vp-checkbox-root[data-state="unchecked"] .vp-checkbox-indicator{display:none}
 .vp-progress-root .vp-progress-indicator{transform:translateX(-52%)}
+.vp-tabs-trigger[data-state="active"]{background:#4361ee!important;color:white!important}
 [contenteditable]{user-select:text;-webkit-user-select:text}
 </style></head><body><div id="root"></div></body></html>`,
   )
