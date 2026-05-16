@@ -466,7 +466,10 @@ export const useDocumentStore = defineStore('document', () => {
   }
 
   function addFrameForLibraryNode(node: DesignNode): DesignNode {
-    const frame = addFrame(120 + frames.value.length * 24, 100 + frames.value.length * 24, 360, 240, {
+    const position = nextAssetFramePosition()
+    const nodeWidth = parseCssPixels(node.props.style?.width, 320)
+    const nodeHeight = estimateNodeHeight(node)
+    const frame = addFrame(position.x, position.y, Math.max(nodeWidth + 48, 360), Math.max(nodeHeight + 48, 220), {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -474,6 +477,31 @@ export const useDocumentStore = defineStore('document', () => {
     }, true)
     insertChild(frame, node)
     return frame
+  }
+
+  function nextAssetFramePosition(): { x: number; y: number } {
+    if (frames.value.length === 0) return { x: 120, y: 100 }
+
+    let maxRight = 0
+    let top = Number.POSITIVE_INFINITY
+    for (const frame of frames.value) {
+      const layout = frameLayout.value[frame.id]
+      if (!layout) continue
+      maxRight = Math.max(maxRight, layout.x + layout.width)
+      top = Math.min(top, layout.y)
+    }
+
+    return {
+      x: maxRight + 80,
+      y: Number.isFinite(top) ? top : 100,
+    }
+  }
+
+  function estimateNodeHeight(node: DesignNode): number {
+    const explicit = parseCssPixels(node.props.style?.height, 0)
+    if (explicit > 0) return explicit
+    const childCount = node.children.filter((child) => typeof child !== 'string').length
+    return Math.max(120, 80 + childCount * 48)
   }
 
   function addDefaultLibraryFrame(): DesignNode {
@@ -594,6 +622,12 @@ export const useDocumentStore = defineStore('document', () => {
 
 function isContainerNode(node: DesignNode): boolean {
   return !['input', 'img', 'br', 'hr'].includes(node.type)
+}
+
+function parseCssPixels(value: unknown, fallback: number): number {
+  if (typeof value !== 'string') return fallback
+  const parsed = Number.parseFloat(value)
+  return Number.isFinite(parsed) ? parsed : fallback
 }
 
 function toPascalCase(value: string): string {

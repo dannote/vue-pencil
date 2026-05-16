@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, reactive, onMounted, onBeforeUnmount, inject, nextTick, type Ref } from 'vue'
+import { ref, computed, reactive, onMounted, onBeforeUnmount, inject, nextTick, watch, type Ref } from 'vue'
 import { useDocumentStore } from '@/model/document'
 import { findNode, findParent, insertChild, cloneNode } from '@/model/operations'
 import { ISLAND_BLEED } from '@/renderer/island-renderer'
@@ -85,6 +85,30 @@ const selectionRects = computed(() => {
   }
 
   return rects
+})
+
+function ensureSelectionVisible() {
+  const pv = panviewRef.value
+  const id = [...store.selectedIds][0]
+  if (!pv || !id) return
+  const rect = getCanvasRect(id)
+  if (!rect) return
+
+  const topLeft = pv.canvasToViewport(rect.x, rect.y)
+  const bottomRight = pv.canvasToViewport(rect.x + rect.width, rect.y + rect.height)
+  const bounds = pv.getBoundingClientRect()
+  const margin = 48
+  const outside = bottomRight.x < bounds.left + margin || topLeft.x > bounds.right - margin || bottomRight.y < bounds.top + margin || topLeft.y > bounds.bottom - margin
+  if (!outside) return
+
+  const centerX = rect.x + rect.width / 2
+  const centerY = rect.y + rect.height / 2
+  pv.scrollTo(pv.clientWidth / 2 - centerX * pv.zoom, pv.clientHeight / 2 - centerY * pv.zoom)
+}
+
+watch(() => [...store.selectedIds].join(','), () => {
+  nextTick(() => requestAnimationFrame(ensureSelectionVisible))
+  window.setTimeout(ensureSelectionVisible, 180)
 })
 
 function getCanvasRect(nodeId: string): NodeRect | null {
