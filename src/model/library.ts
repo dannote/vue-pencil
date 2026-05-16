@@ -1,4 +1,5 @@
 import { createNode } from './operations'
+import { createSlotNode } from './slots'
 import type { DesignNode } from './types'
 
 export interface LibraryComponent {
@@ -39,6 +40,13 @@ export const LIBRARY_COMPONENTS: LibraryComponent[] = [
     createNode: createProgressNode,
   },
   {
+    id: 'layout.card',
+    name: 'Card',
+    group: 'Layout',
+    description: 'Composable card with Header, Body, and Footer slots.',
+    createNode: createCardNode,
+  },
+  {
     id: 'reka.tabs',
     name: 'Tabs',
     group: 'Navigation',
@@ -65,6 +73,33 @@ export function createLibraryNode(componentId: string): DesignNode {
   const component = LIBRARY_COMPONENTS.find((candidate) => candidate.id === componentId)
   if (!component) throw new Error(`Unknown library component: ${componentId}`)
   return component.createNode()
+}
+
+function createCardNode(): DesignNode {
+  const root = createNode('div', {
+    width: '320px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '14px',
+    padding: '18px',
+    borderRadius: '18px',
+    background: 'white',
+    color: '#1e1e2e',
+    boxShadow: '0 12px 32px rgba(0,0,0,0.18)',
+    fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
+  }, [], 'Card')
+
+  root.meta.source = { kind: 'library', library: 'vue-pencil', component: 'Card', part: 'root' }
+  root.children.push(
+    createSlotNode({ name: 'header', label: 'Header', preferredComponents: ['layout.heading'], placeholder: 'Drop header content' }, [
+      createNode('h2', { margin: '0', fontSize: '20px', fontWeight: '800' }, ['Card title'], 'Title'),
+    ]),
+    createSlotNode({ name: 'default', label: 'Body', placeholder: 'Drop body content' }, [
+      createNode('p', { margin: '0', color: '#6c7086', fontSize: '14px', lineHeight: '1.5' }, ['Compose this card by dropping layers or assets into slots.'], 'Body text'),
+    ]),
+    createSlotNode({ name: 'footer', label: 'Footer', preferredComponents: ['reka.switch', 'reka.checkbox'], placeholder: 'Drop footer actions' }),
+  )
+  return root
 }
 
 function createSwitchNode(): DesignNode {

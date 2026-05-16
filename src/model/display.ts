@@ -9,6 +9,8 @@ export function isLibraryInstanceRoot(node: DesignNode): boolean {
 }
 
 export function nodeDisplayName(node: DesignNode): string {
+  if (node.meta.slot) return node.meta.slot.label
+
   if (node.meta.source?.kind === 'library') {
     return node.meta.name ?? node.meta.source.component
   }
@@ -17,6 +19,8 @@ export function nodeDisplayName(node: DesignNode): string {
 }
 
 export function nodeDisplayKind(node: DesignNode): string {
+  if (node.meta.slot) return 'Slot'
+
   if (node.meta.source?.kind === 'library') {
     if (node.meta.source.part === 'root') return `${node.meta.source.component} instance`
     if (node.meta.source.part) return `${node.meta.source.component} ${node.meta.source.part}`
@@ -27,6 +31,7 @@ export function nodeDisplayKind(node: DesignNode): string {
 }
 
 export function nodeDisplayDetail(node: DesignNode): string | undefined {
+  if (node.meta.slot) return node.meta.slot.name
   if (node.meta.source?.kind === 'library') return node.meta.source.library
   return undefined
 }

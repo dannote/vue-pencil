@@ -6,6 +6,7 @@ import IconBox from '~icons/lucide/box'
 import IconComponent from '~icons/lucide/component'
 import IconGripVertical from '~icons/lucide/grip-vertical'
 import IconLibrary from '~icons/lucide/library'
+import IconPanelTop from '~icons/lucide/panel-top'
 import IconListCollapse from '~icons/lucide/list-collapse'
 import IconSlidersHorizontal from '~icons/lucide/sliders-horizontal'
 import IconSquareCheck from '~icons/lucide/square-check'
@@ -37,7 +38,9 @@ const libraryGroups = computed(() => {
     ...LIBRARY_COMPONENTS.map((component) => ({
       ...component,
       source: 'reka-ui',
-      icon: component.id === 'reka.switch'
+      icon: component.id === 'layout.card'
+        ? IconPanelTop
+        : component.id === 'reka.switch'
         ? IconToggleRight
         : component.id === 'reka.checkbox'
           ? IconSquareCheck

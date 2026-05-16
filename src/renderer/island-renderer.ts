@@ -2,6 +2,7 @@ import { createApp, h, ref, type VNode, type App, type Ref } from 'vue'
 import { AccordionContent, AccordionHeader, AccordionItem, AccordionRoot, AccordionTrigger, CheckboxIndicator, CheckboxRoot, CollapsibleContent, CollapsibleRoot, CollapsibleTrigger, ProgressIndicator, ProgressRoot, SliderRange, SliderRoot, SliderThumb, SliderTrack, SwitchRoot, SwitchThumb, TabsContent, TabsList, TabsRoot, TabsTrigger } from 'reka-ui'
 import type { Binding, CapabilityInstance, DesignNode } from '@/model/types'
 import { bindingPreviewValue, styleBindingPreview, textBindingPreview } from './preview-values'
+import { isSlotNode, slotPlaceholder } from '@/model/slots'
 
 export interface IslandRuntime {
   capabilities: CapabilityInstance[]
@@ -37,7 +38,13 @@ function renderDesignNode(node: DesignNode | string, runtime: IslandRuntime): VN
   if (typeof node === 'string') return node
 
   const textBinding = runtime.bindings.find((binding) => binding.target.kind === 'text' && binding.target.nodeId === node.id)
-  const children = textBinding ? [textBindingPreview(textBinding, runtime.capabilities)] : node.children.map((child) => renderDesignNode(child, runtime))
+  const children = textBinding
+    ? [textBindingPreview(textBinding, runtime.capabilities)]
+    : node.children.map((child) => renderDesignNode(child, runtime))
+
+  if (isSlotNode(node) && children.length === 0) {
+    children.push(slotPlaceholder(node))
+  }
 
   const props: Record<string, unknown> = {
     'data-node-id': node.id,
@@ -52,6 +59,10 @@ function renderDesignNode(node: DesignNode | string, runtime: IslandRuntime): VN
   if (Object.keys(style).length > 0) props.style = style
   if (node.props.class) {
     props.class = node.props.class
+  }
+  if (isSlotNode(node)) {
+    props.class = [props.class, 'vp-slot'].filter(Boolean).join(' ')
+    props['data-slot-name'] = node.meta.slot?.name
   }
 
   for (const binding of runtime.bindings) {
@@ -99,6 +110,10 @@ input:focus{border-color:#4361ee !important}
 .vp-checkbox-root[data-state="unchecked"] .vp-checkbox-indicator{display:none}
 .vp-progress-root .vp-progress-indicator{transform:translateX(-52%)}
 .vp-tabs-trigger[data-state="active"]{background:#4361ee!important;color:white!important}
+.vp-slot{position:relative}
+.vp-slot:empty,.vp-slot{outline-color:rgba(244,114,182,.55)!important}
+.vp-slot:hover{outline:1px solid rgba(244,114,182,.9)!important;outline-offset:-1px}
+.vp-slot[data-slot-name]::before{content:attr(data-slot-name) ' slot';position:absolute;top:-8px;left:10px;padding:1px 5px;border-radius:999px;background:#f472b6;color:white;font:600 9px -apple-system,BlinkMacSystemFont,sans-serif;text-transform:uppercase;letter-spacing:.03em;pointer-events:none;opacity:.85}
 [contenteditable]{user-select:text;-webkit-user-select:text}
 </style></head><body><div id="root"></div></body></html>`,
   )

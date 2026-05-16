@@ -8,6 +8,7 @@ import IconComponent from '~icons/lucide/component'
 import IconFrame from '~icons/lucide/frame'
 import IconMousePointerSquareDashed from '~icons/lucide/mouse-pointer-square-dashed'
 import IconSquare from '~icons/lucide/square'
+import IconPanelTop from '~icons/lucide/panel-top'
 import IconTextCursorInput from '~icons/lucide/text-cursor-input'
 import IconType from '~icons/lucide/type'
 
@@ -31,6 +32,7 @@ const displayKind = computed(() => nodeDisplayKind(props.node))
 const indent = computed(() => `${8 + (props.depth ?? 0) * 14}px`)
 
 const icon = computed(() => {
+  if (props.node.meta.slot) return IconPanelTop
   if (isLibraryInstanceRoot(props.node)) return IconComponent
   if (props.node.meta.source?.kind === 'library') return IconMousePointerSquareDashed
   if (props.node.type === 'h1' || props.node.type === 'h2' || props.node.type === 'p' || props.node.type === 'span' || props.node.type === 'label') return IconType

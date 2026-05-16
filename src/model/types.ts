@@ -12,7 +12,16 @@ export interface DesignNode {
     locked?: boolean
     hidden?: boolean
     source?: NodeSource
+    slot?: SlotMeta
   }
+}
+
+export interface SlotMeta {
+  name: string
+  label: string
+  accepts?: string[]
+  preferredComponents?: string[]
+  placeholder?: string
 }
 
 export type NodeSource =
