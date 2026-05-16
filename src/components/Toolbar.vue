@@ -17,16 +17,25 @@ import IconSquare from '~icons/lucide/square'
 import IconTextCursorInput from '~icons/lucide/text-cursor-input'
 import IconType from '~icons/lucide/type'
 import IconX from '~icons/lucide/x'
+import IconZoomIn from '~icons/lucide/zoom-in'
+import IconZoomOut from '~icons/lucide/zoom-out'
 
 const props = defineProps<{
   zoom: number
   activeTool: string
   preview: boolean
+  statusTitle: string
+  statusDetail?: string
 }>()
 
 const emit = defineEmits<{
   tool: [name: string]
   'update:preview': [value: boolean]
+  'zoom-in': []
+  'zoom-out': []
+  'zoom-reset': []
+  'zoom-fit': []
+  'zoom-selection': []
 }>()
 
 const tools = [
@@ -73,7 +82,10 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeyDown))
   <div class="fixed top-0 left-0 right-0 z-50 flex h-10 items-center justify-between border-b border-[#313244] bg-[#1e1e2e]/95 px-3 backdrop-blur">
     <div class="flex min-w-40 items-center gap-2">
       <span v-if="preview" class="rounded-md bg-[#313244] px-2 py-1 text-xs font-medium text-[#cdd6f4]">Preview Mode</span>
-      <span v-else class="text-xs font-medium text-[#a6adc8]">{{ activeLabel }}</span>
+      <span v-else class="flex min-w-0 items-baseline gap-1.5">
+        <span class="max-w-40 truncate text-xs font-semibold text-[#cdd6f4]">{{ statusTitle || activeLabel }}</span>
+        <span v-if="statusDetail" class="max-w-44 truncate text-[10px] font-medium text-[#6c7086]">{{ statusDetail }}</span>
+      </span>
     </div>
 
     <span class="text-[13px] font-semibold tracking-wide text-[#a6adc8]">VuePencil</span>
@@ -90,7 +102,38 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeyDown))
         <IconPlay v-else class="size-3.5" />
         {{ preview ? 'Exit Preview' : 'Preview' }}
       </button>
-      <span class="min-w-[44px] text-center text-[11px] tabular-nums text-[#a6adc8]">{{ Math.round(zoom * 100) }}%</span>
+      <DropdownMenuRoot>
+        <DropdownMenuTrigger as-child>
+          <button class="flex h-7 min-w-[58px] items-center justify-center gap-1 rounded-md px-2 text-[11px] font-semibold tabular-nums text-[#a6adc8] transition-colors hover:bg-[#313244] hover:text-[#cdd6f4]">
+            {{ Math.round(zoom * 100) }}%
+            <IconChevronDown class="size-3" />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuPortal>
+          <DropdownMenuContent side="bottom" :side-offset="8" align="end" class="z-[60] min-w-40 rounded-xl border border-[#45475a] bg-[#1e1e2e] p-1 text-[#cdd6f4] shadow-2xl shadow-black/30">
+            <DropdownMenuItem class="flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium outline-none hover:bg-[#313244] data-[highlighted]:bg-[#313244]" @select="emit('zoom-in')">
+              <IconZoomIn class="size-3.5" />
+              <span class="flex-1">Zoom In</span>
+              <span class="text-[10px] text-[#6c7086]">⌘+</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem class="flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium outline-none hover:bg-[#313244] data-[highlighted]:bg-[#313244]" @select="emit('zoom-out')">
+              <IconZoomOut class="size-3.5" />
+              <span class="flex-1">Zoom Out</span>
+              <span class="text-[10px] text-[#6c7086]">⌘-</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem class="flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium outline-none hover:bg-[#313244] data-[highlighted]:bg-[#313244]" @select="emit('zoom-reset')">
+              <span class="flex-1">Actual Size</span>
+              <span class="text-[10px] text-[#6c7086]">100%</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem class="flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium outline-none hover:bg-[#313244] data-[highlighted]:bg-[#313244]" @select="emit('zoom-fit')">
+              <span class="flex-1">Zoom to Fit</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem class="flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium outline-none hover:bg-[#313244] data-[highlighted]:bg-[#313244]" @select="emit('zoom-selection')">
+              <span class="flex-1">Zoom to Selection</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenuPortal>
+      </DropdownMenuRoot>
     </div>
   </div>
 

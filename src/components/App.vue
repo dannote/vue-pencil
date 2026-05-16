@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, provide } from 'vue'
 import { useDocumentStore } from '@/model/document'
+import { nodeDisplayDetail, nodeDisplayKind, nodeDisplayName } from '@/model/display'
 import { documentToVueSfc } from '@/model/serialize'
 import Toolbar from './Toolbar.vue'
 import LayerPanel from './LayerPanel.vue'
@@ -20,8 +21,46 @@ const toasts = ref<ToastMessage[]>([])
 provide('preview', preview)
 provide('activeTool', activeTool)
 
+const selectionStatus = computed(() => {
+  if (preview.value) return { title: 'Preview Mode' }
+  if (store.selectedIds.size > 1) return { title: `${store.selectedIds.size} layers selected` }
+  const node = store.selectedNodes[0]
+  if (!node) return { title: activeTool.value === 'select' ? 'Move' : activeTool.value }
+
+  const detailParts = [nodeDisplayKind(node), nodeDisplayDetail(node)].filter(Boolean)
+  if (node.props.style?.display === 'flex' || node.props.style?.display === 'inline-flex') detailParts.push('Auto layout')
+  return {
+    title: nodeDisplayName(node),
+    detail: detailParts.join(' · '),
+  }
+})
+
 function onTool(name: string) {
   activeTool.value = name
+}
+
+function setZoom(value: number) {
+  const clamped = Math.max(0.1, Math.min(4, value))
+  canvasRef.value?.panviewRef?.zoomTo(clamped)
+  zoom.value = clamped
+}
+
+function zoomIn() {
+  setZoom(zoom.value * 1.25)
+}
+
+function zoomOut() {
+  setZoom(zoom.value / 1.25)
+}
+
+function zoomToSelection() {
+  setZoom(1)
+  showToast('Zoomed to selection')
+}
+
+function zoomToFit() {
+  setZoom(0.85)
+  showToast('Zoomed to fit')
 }
 
 function showToast(text: string) {
@@ -446,9 +485,22 @@ onMounted(() => {
 </script>
 
 <template>
-  <Toolbar :zoom="zoom" :active-tool="activeTool" :preview="preview" @tool="onTool" @update:preview="preview = $event" />
+  <Toolbar
+    :zoom="zoom"
+    :active-tool="activeTool"
+    :preview="preview"
+    :status-title="selectionStatus.title"
+    :status-detail="selectionStatus.detail"
+    @tool="onTool"
+    @update:preview="preview = $event"
+    @zoom-in="zoomIn"
+    @zoom-out="zoomOut"
+    @zoom-reset="setZoom(1)"
+    @zoom-fit="zoomToFit"
+    @zoom-selection="zoomToSelection"
+  />
   <LayerPanel v-if="!preview" :frames="store.frames" />
-  <Canvas ref="canvasRef" />
+  <Canvas ref="canvasRef" @zoom-change="zoom = $event" />
   <PropertiesPanel v-if="!preview" />
   <CommandPalette v-model:open="commandPaletteOpen" :commands="commands" />
   <ToastHost :messages="toasts" />

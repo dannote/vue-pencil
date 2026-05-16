@@ -16,6 +16,10 @@ import {
 } from '@/renderer/geometry'
 import { isFlexContainer, getFlexDirection } from '@/renderer/flex-detect'
 
+const emit = defineEmits<{
+  'zoom-change': [zoom: number]
+}>()
+
 const store = useDocumentStore()
 const preview = inject<Ref<boolean>>('preview')!
 const activeTool = inject<Ref<string>>('activeTool')!
@@ -27,7 +31,9 @@ const islandRefs = ref<Record<string, InstanceType<typeof Island>>>({})
 defineExpose({ panviewRef, zoom })
 
 function onViewportChange() {
-  if (panviewRef.value) zoom.value = panviewRef.value.zoom
+  if (!panviewRef.value) return
+  zoom.value = panviewRef.value.zoom
+  emit('zoom-change', zoom.value)
 }
 
 function onLibraryDrop(event: DragEvent) {
