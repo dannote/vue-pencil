@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import type { ComponentPropertyContract } from '@/model/component-contracts'
 import type { DesignNode } from '@/model/types'
 import { bindableValues, bindingSourceId } from '@/model/bindings'
-import { componentPartNodes, componentPropertyTarget, getComponentContract } from '@/model/component-contracts'
+import { componentPartNodes, componentPropertyTarget, componentSlotNodes, getComponentContract } from '@/model/component-contracts'
 import { useDocumentStore } from '@/model/document'
 import SectionHeader from './SectionHeader.vue'
 
@@ -15,6 +15,7 @@ const store = useDocumentStore()
 const contract = computed(() => getComponentContract(props.node))
 const values = computed(() => bindableValues(store.capabilities, store.frames))
 const parts = computed(() => contract.value ? componentPartNodes(props.node, contract.value) : [])
+const slots = computed(() => componentSlotNodes(props.node))
 
 function propertyValues(property: ComponentPropertyContract) {
   return values.value.filter((value) => property.accepts.includes(value.type))
@@ -57,6 +58,21 @@ function bindProperty(property: ComponentPropertyContract, sourceId: string) {
         <span class="rounded-full bg-[#313244] px-2 py-0.5 text-[10px] text-[#94e2d5]">
           Instance
         </span>
+      </div>
+
+      <div v-if="slots.length > 0" class="mt-3 space-y-1.5">
+        <div class="text-[10px] font-medium uppercase tracking-wide text-[#6c7086]">Slots</div>
+        <div class="grid grid-cols-2 gap-1.5">
+          <button
+            v-for="slot in slots"
+            :key="slot.node.id"
+            class="rounded-md border border-[#f472b6]/45 bg-[#11111b] px-2 py-1.5 text-left text-[11px] text-[#f9a8d4] transition-colors hover:border-[#f9a8d4] hover:bg-[#313244]"
+            :class="store.selectedIds.has(slot.node.id) ? 'border-[#f9a8d4] bg-[#313244]' : ''"
+            @click="store.select(slot.node.id)"
+          >
+            {{ slot.label }}
+          </button>
+        </div>
       </div>
 
       <div v-if="parts.length > 0" class="mt-3 space-y-1.5">

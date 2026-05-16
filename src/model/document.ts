@@ -5,6 +5,7 @@ import { createCapabilityInstance } from './capabilities'
 import { createLibraryNode } from './library'
 import { nodeId, cloneNode, createNode, findNode, findParent, removeNode, insertChild } from './operations'
 import { isLibraryInstanceRoot } from './display'
+import { isSlotNode } from './slots'
 import { clearHistory as clearHistoryStack, pushSnapshot, redo as redoSnapshot, undo as undoSnapshot, type Snapshot } from './history'
 
 export const useDocumentStore = defineStore('document', () => {
@@ -302,6 +303,32 @@ export const useDocumentStore = defineStore('document', () => {
     deselect()
   }
 
+  function makeNodeSlot(nodeIdVal: string, name?: string): DesignNode | null {
+    const node = findNodeInDocument(nodeIdVal)
+    if (!node) return null
+    recordHistory()
+    const label = node.meta.name ?? 'Slot'
+    const slotName = name ?? toKebabCase(label).replace(/-/g, '_')
+    node.meta.slot = {
+      name: slotName || 'default',
+      label,
+      placeholder: `Drop into ${label}`,
+    }
+    node.meta.name = `${label} slot`
+    node.props.style = {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '8px',
+      minHeight: node.children.length > 0 ? 'auto' : '44px',
+      padding: node.children.length > 0 ? (node.props.style?.padding ?? '0') : '10px',
+      borderRadius: node.props.style?.borderRadius ?? '10px',
+      outline: node.children.length > 0 ? 'none' : '1px dashed rgba(244, 114, 182, 0.55)',
+      outlineOffset: '-1px',
+      ...node.props.style,
+    }
+    return node
+  }
+
   function createComponentFromNode(nodeIdVal: string): ComponentDef | null {
     const frame = findFrameContaining(nodeIdVal)
     if (!frame) return null
@@ -315,7 +342,7 @@ export const useDocumentStore = defineStore('document', () => {
       name,
       tree: cloneNode(node),
       props: [],
-      slots: [],
+      slots: collectSlots(node),
     }
     componentDefs.value.push(component)
 
@@ -518,6 +545,7 @@ export const useDocumentStore = defineStore('document', () => {
     toggleAutoLayoutForSelection,
     duplicateSelection,
     deleteSelection,
+    makeNodeSlot,
     createComponentFromNode,
     insertLibraryComponent,
     insertLibraryComponentAt,
@@ -538,6 +566,27 @@ function toPascalCase(value: string): string {
   const cleaned = value.replace(/[^a-zA-Z0-9]+/g, ' ').trim()
   const pascal = cleaned.replace(/(^|\s+)(\w)/g, (_, _space: string, letter: string) => letter.toUpperCase()).replace(/\s+/g, '')
   return pascal || 'Component'
+}
+
+function toKebabCase(value: string): string {
+  return value
+    .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+    .replace(/[^a-zA-Z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .toLowerCase()
+}
+
+function collectSlots(node: DesignNode): { name: string }[] {
+  const names = new Set<string>()
+  collectSlotNames(node, names)
+  return [...names].map((name) => ({ name }))
+}
+
+function collectSlotNames(node: DesignNode, names: Set<string>): void {
+  if (isSlotNode(node) && node.meta.slot) names.add(node.meta.slot.name)
+  for (const child of node.children) {
+    if (typeof child !== 'string') collectSlotNames(child, names)
+  }
 }
 
 function sameTarget(left: BindingTarget, right: BindingTarget): boolean {

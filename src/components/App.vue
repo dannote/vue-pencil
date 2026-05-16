@@ -109,6 +109,18 @@ const commands = computed<CommandItem[]>(() => {
       },
     },
     {
+      id: 'make-slot',
+      title: 'Make Slot',
+      description: 'Turn the selected layer into a composable content area',
+      disabled: store.selectedIds.size !== 1,
+      run: () => {
+        const id = selectedNodeId()
+        if (!id) return
+        const node = store.makeNodeSlot(id)
+        showToast(node?.meta.slot ? `${node.meta.slot.label} slot created` : 'Could not create slot')
+      },
+    },
+    {
       id: 'create-component',
       title: 'Create Component',
       description: 'Save the selected node as a local asset',

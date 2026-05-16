@@ -20,6 +20,12 @@ export interface ComponentPartNode {
   node: DesignNode
 }
 
+export interface ComponentSlotNode {
+  node: DesignNode
+  name: string
+  label: string
+}
+
 export interface ComponentContract {
   type: string
   label: string
@@ -190,11 +196,27 @@ export function componentPropertyTarget(node: DesignNode, property: ComponentPro
   return { kind: 'prop', nodeId: node.id, prop: property.targetProp }
 }
 
+export function componentSlotNodes(root: DesignNode): ComponentSlotNode[] {
+  const slots: ComponentSlotNode[] = []
+  collectSlotNodes(root, slots)
+  return slots
+}
+
 export function componentPartNodes(root: DesignNode, contract: ComponentContract): ComponentPartNode[] {
   return contract.parts.flatMap((part) => {
     const node = findPartNode(root, part)
     return node ? [{ contract: part, node }] : []
   })
+}
+
+function collectSlotNodes(node: DesignNode, slots: ComponentSlotNode[]): void {
+  if (node.meta.slot) {
+    slots.push({ node, name: node.meta.slot.name, label: node.meta.slot.label })
+  }
+
+  for (const child of node.children) {
+    if (typeof child !== 'string') collectSlotNodes(child, slots)
+  }
 }
 
 function findPartNode(node: DesignNode, part: ComponentPartContract): DesignNode | undefined {
