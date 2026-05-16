@@ -15,6 +15,7 @@ import {
   type NodeRect,
 } from '@/renderer/geometry'
 import { isFlexContainer, getFlexDirection } from '@/renderer/flex-detect'
+import { isSlotNode } from '@/model/slots'
 
 const emit = defineEmits<{
   'zoom-change': [zoom: number]
@@ -207,7 +208,7 @@ function findDropTarget(canvasX: number, canvasY: number, draggedNodeId: string)
       }
 
       const modelNode = findNode(frame, nid)
-      if (modelNode && isFlexContainer(modelNode)) {
+      if (modelNode && (isFlexContainer(modelNode) || isSlotNode(modelNode))) {
         const direction = getFlexDirection(modelNode)
         const childRects = getChildRects(islandComp.iframe!, nid)
           .filter((c) => c.nodeId !== draggedNodeId)
@@ -239,7 +240,7 @@ function findDropTarget(canvasX: number, canvasY: number, draggedNodeId: string)
       current = current.parentElement?.closest('[data-node-id]') ?? null
     }
 
-    if (isFlexContainer(frame)) {
+    if (isFlexContainer(frame) || isSlotNode(frame)) {
       const direction = getFlexDirection(frame)
       const childRects = getChildRects(islandComp.iframe!, frame.id)
         .filter((c) => c.nodeId !== draggedNodeId)
