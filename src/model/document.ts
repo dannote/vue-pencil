@@ -232,6 +232,26 @@ export const useDocumentStore = defineStore('document', () => {
     return name
   }
 
+  function toggleAutoLayoutForSelection(): boolean {
+    if (selectedIds.value.size !== 1) return false
+    const id = [...selectedIds.value][0]
+    const node = findNodeInDocument(id)
+    if (!node) return false
+
+    const style = node.props.style ?? {}
+    if (style.display === 'flex' || style.display === 'inline-flex') {
+      updateNodeStyle(id, { display: '', flexDirection: '', gap: '', padding: '', alignItems: '', justifyContent: '' })
+    } else {
+      updateNodeStyle(id, {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '8px',
+        padding: style.padding || '8px',
+      })
+    }
+    return true
+  }
+
   function duplicateSelection(): void {
     if (selectedIds.value.size === 0) return
     recordHistory()
@@ -495,6 +515,7 @@ export const useDocumentStore = defineStore('document', () => {
     addCapability,
     removeCapability,
     capabilitiesForNode,
+    toggleAutoLayoutForSelection,
     duplicateSelection,
     deleteSelection,
     createComponentFromNode,
