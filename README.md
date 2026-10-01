@@ -31,3 +31,7 @@ bun dev          # the editor
 bun run test     # unit tests
 bun run check    # type checking
 ```
+
+## License
+
+MIT
